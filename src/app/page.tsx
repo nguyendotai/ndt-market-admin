@@ -1,10 +1,5 @@
-import { AdminShell } from "@/components/layout/admin-shell";
-import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <AdminShell>
-      <DashboardPage />
-    </AdminShell>
-  );
+  redirect("/admin");
 }

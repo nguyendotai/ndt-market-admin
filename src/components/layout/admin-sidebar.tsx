@@ -1,0 +1,86 @@
+"use client";
+
+import {
+  BadgeCheck,
+  Boxes,
+  CreditCard,
+  Image,
+  LayoutDashboard,
+  Megaphone,
+  Newspaper,
+  Package,
+  ReceiptText,
+  Settings,
+  ShoppingBasket,
+  Star,
+  Store,
+  TicketPercent,
+  Users,
+  Warehouse,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { adminMenu } from "@/configs/menu";
+import { cn } from "@/lib/utils";
+
+const iconMap = {
+  BadgeCheck,
+  Boxes,
+  CreditCard,
+  Image,
+  LayoutDashboard,
+  Megaphone,
+  Newspaper,
+  Package,
+  ReceiptText,
+  Settings,
+  Star,
+  Store,
+  TicketPercent,
+  Users,
+  Warehouse,
+};
+
+export function AdminSidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="fixed inset-y-0 left-0 hidden w-68 border-r bg-background lg:block">
+      <div className="flex h-16 items-center gap-3 border-b px-5">
+        <div className="flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <ShoppingBasket className="size-5" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold leading-none">NDT Market</p>
+          <p className="mt-1 text-xs text-muted-foreground">Admin dashboard</p>
+        </div>
+      </div>
+
+      <nav className="h-[calc(100dvh-4rem)] space-y-1 overflow-y-auto px-3 py-4">
+        {adminMenu.map((item) => {
+          const Icon = iconMap[item.icon as keyof typeof iconMap] ?? LayoutDashboard;
+          const isActive =
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.module}
+              href={item.href}
+              className={cn(
+                "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                isActive &&
+                  "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+              )}
+            >
+              <Icon className="size-4" />
+              <span>{item.title}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
