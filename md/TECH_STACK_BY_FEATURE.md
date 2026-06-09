@@ -32,6 +32,7 @@ Khi them moi hoac thay doi cong nghe cho bat ky chuc nang nao, hay cap nhat bang
 | Dashboard overview | React Server Components, TailwindCSS, Lucide React | `src/modules/dashboard` | Du lieu hien tai dang la mock UI |
 | Dashboard overview route | Next.js App Router, Recharts, shadcn-style Card/Badge/Table, mock dashboard service | `src/app/admin/dashboard/page.tsx`, `src/modules/dashboard/pages/DashboardPage.tsx`, `src/modules/dashboard/components/DashboardCharts.tsx`, `src/services/dashboard.service.ts` | Route `/admin/dashboard`; mock service can thay bang API that khi backend co thong ke |
 | Categories management | React Hook Form, Zod, Axios service, shadcn-style Card/Table/Badge, Sonner toast | `src/app/admin/categories/page.tsx`, `src/modules/categories`, `src/services/category.service.ts`, `src/services/upload.service.ts` | Quan ly danh muc cha/con theo `parent`, search, filter active, create/edit/delete, auto slug, toggle active, upload image qua `POST /api/v1/uploads/image` voi folder `category` |
+| Brands management | React Hook Form, Zod, Axios service, shadcn-style Card/Table/Badge, Sonner toast | `src/app/admin/brands/page.tsx`, `src/modules/brands`, `src/services/brand.service.ts`, `src/services/upload.service.ts` | Quan ly thuong hieu, search, create/edit/delete, auto slug, toggle active, preview/upload logo qua folder `brand` |
 
 ## Template Cho Chuc Nang Moi
 
