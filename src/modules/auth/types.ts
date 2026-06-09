@@ -11,9 +11,12 @@ export type LoginRequest = {
 };
 
 export type LoginResponse = {
+  success?: boolean;
+  message?: string;
   accessToken?: string;
   token?: string;
   user?: AuthUser;
+  meta?: Record<string, unknown>;
   data?: {
     accessToken?: string;
     token?: string;

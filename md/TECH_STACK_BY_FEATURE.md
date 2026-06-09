@@ -27,6 +27,7 @@ Khi them moi hoac thay doi cong nghe cho bat ky chuc nang nao, hay cap nhat bang
 | Toast | Sonner | `src/providers/AppProvider.tsx` | Toaster dat o root provider |
 | State management | Redux Toolkit, React Redux | `src/store` | Store typed voi `RootState`, `AppDispatch` |
 | API client | RTK Query, Axios, `NEXT_PUBLIC_API_URL`, Zod env validation | `src/services/baseApi.ts`, `src/lib/axios.ts`, `src/configs/env.ts`, `.env.example` | RTK Query cho data fetching, Axios client san sang cho service rieng |
+| Service layer | Axios instance, CRUD service factory, normalized backend response | `src/lib/axios.ts`, `src/services/api-response.ts`, `src/services/crud-service.ts`, `src/services/*.service.ts` | BaseURL tu `NEXT_PUBLIC_API_URL`, Bearer token interceptor, response error 401/403/500, helper response `{ success, message, data, meta }` |
 | Form validation | React Hook Form, Zod, `@hookform/resolvers` | `src/modules/products/schemas`, `src/lib/validators.ts` | Schema mau cho product form da chuyen vao module products |
 | Dashboard overview | React Server Components, TailwindCSS, Lucide React | `src/modules/dashboard` | Du lieu hien tai dang la mock UI |
 
