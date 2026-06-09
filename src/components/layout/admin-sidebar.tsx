@@ -46,9 +46,9 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-68 border-r bg-background lg:block">
-      <div className="flex h-16 items-center gap-3 border-b px-5">
-        <div className="flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+    <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:block">
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-primary/20">
           <ShoppingBasket className="size-5" />
         </div>
         <div>
@@ -70,9 +70,9 @@ export function AdminSidebar() {
               key={item.module}
               href={item.href}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 isActive &&
-                  "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                  "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-primary/15 hover:bg-sidebar-primary hover:text-sidebar-primary-foreground",
               )}
             >
               <Icon className="size-4" />

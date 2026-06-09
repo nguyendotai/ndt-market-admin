@@ -2,11 +2,17 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CircleAlert,
+  Download,
+  LayoutDashboard,
   PackageCheck,
+  Plus,
   ReceiptText,
   Users,
   Wallet,
 } from "lucide-react";
+
+import { DataTable, PageHeader, StatusBadge } from "@/components/common";
+import { Button } from "@/components/ui/button";
 
 const stats = [
   {
@@ -39,11 +45,11 @@ const stats = [
   },
 ];
 
-const orders = [
-  { id: "NDT-10243", customer: "Nguyen Minh Anh", total: "845,000", status: "Dang soan hang" },
-  { id: "NDT-10242", customer: "Tran Quoc Viet", total: "326,000", status: "Cho giao" },
-  { id: "NDT-10241", customer: "Pham Thanh Ha", total: "1,240,000", status: "Da thanh toan" },
-  { id: "NDT-10240", customer: "Le Hoang Nam", total: "219,000", status: "Moi tao" },
+const orders: OrderRow[] = [
+  { id: "NDT-10243", customer: "Nguyen Minh Anh", total: "845,000 d", status: "packing" },
+  { id: "NDT-10242", customer: "Tran Quoc Viet", total: "326,000 d", status: "shipping" },
+  { id: "NDT-10241", customer: "Pham Thanh Ha", total: "1,240,000 d", status: "paid" },
+  { id: "NDT-10240", customer: "Le Hoang Nam", total: "219,000 d", status: "pending" },
 ];
 
 const lowStock = [
@@ -52,15 +58,40 @@ const lowStock = [
   { name: "Rau cai ngot 500g", stock: 15 },
 ];
 
+type OrderRow = {
+  id: string;
+  customer: string;
+  total: string;
+  status: "packing" | "shipping" | "paid" | "pending";
+};
+
+const orderStatusMap = {
+  packing: { label: "Dang soan hang", variant: "warning" },
+  shipping: { label: "Cho giao", variant: "info" },
+  paid: { label: "Da thanh toan", variant: "success" },
+  pending: { label: "Moi tao", variant: "neutral" },
+} as const;
+
 export function DashboardPage() {
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-muted-foreground">Xin chao, Admin</p>
-        <h1 className="text-2xl font-semibold tracking-normal md:text-3xl">
-          Bang dieu khien sieu thi online
-        </h1>
-      </section>
+      <PageHeader
+        description="Theo doi doanh thu, don hang, khach hang va ton kho theo thoi gian thuc."
+        icon={LayoutDashboard}
+        title="Bang dieu khien sieu thi online"
+        actions={
+          <>
+            <Button className="gap-2" variant="outline">
+              <Download className="size-4" />
+              Xuat bao cao
+            </Button>
+            <Button className="gap-2">
+              <Plus className="size-4" />
+              Tao don hang
+            </Button>
+          </>
+        }
+      />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
@@ -85,23 +116,24 @@ export function DashboardPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <div className="border-b p-5">
-            <h2 className="text-base font-semibold">Don hang gan day</h2>
-          </div>
-          <div className="divide-y">
-            {orders.map((order) => (
-              <div key={order.id} className="grid gap-3 p-5 sm:grid-cols-[120px_1fr_120px_140px] sm:items-center">
-                <p className="text-sm font-medium">{order.id}</p>
-                <p className="text-sm text-muted-foreground">{order.customer}</p>
-                <p className="text-sm font-medium">{order.total} d</p>
-                <span className="w-fit rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                  {order.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTable<OrderRow>
+          columns={[
+            { key: "id", header: "Ma don", cell: (row) => <span className="font-medium">{row.id}</span> },
+            { key: "customer", header: "Khach hang" },
+            { key: "total", header: "Tong tien", cell: (row) => <span className="font-medium">{row.total}</span> },
+            {
+              key: "status",
+              header: "Trang thai",
+              cell: (row) => {
+                const status = orderStatusMap[row.status];
+                return <StatusBadge label={status.label} variant={status.variant} />;
+              },
+            },
+          ]}
+          data={orders}
+          emptyTitle="Chua co don hang"
+          getRowKey={(row) => row.id}
+        />
 
         <div className="rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
           <div className="flex items-center gap-3">
@@ -123,7 +155,37 @@ export function DashboardPage() {
           </div>
         </div>
       </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <DataTable<OrderRow>
+          columns={[
+            { key: "id", header: "Ma don" },
+            { key: "customer", header: "Khach hang" },
+          ]}
+          data={[]}
+          getRowKey={(row) => row.id}
+          loading
+        />
+        <DataTable<OrderRow>
+          columns={[
+            { key: "id", header: "Ma don" },
+            { key: "customer", header: "Khach hang" },
+          ]}
+          data={[]}
+          emptyTitle="Chua co khuyen mai"
+          emptyDescription="Tao chuong trinh khuyen mai de hien thi tai day."
+          getRowKey={(row) => row.id}
+        />
+        <DataTable<OrderRow>
+          columns={[
+            { key: "id", header: "Ma don" },
+            { key: "customer", header: "Khach hang" },
+          ]}
+          data={[]}
+          error="May chu dang ban, vui long thu lai sau vai giay."
+          getRowKey={(row) => row.id}
+        />
+      </section>
     </div>
   );
 }
-

@@ -17,9 +17,12 @@ Khi them moi hoac thay doi cong nghe cho bat ky chuc nang nao, hay cap nhat bang
 | Chuc nang | Cong nghe su dung | File/folder lien quan | Ghi chu |
 | --- | --- | --- | --- |
 | Module architecture | Next.js App Router, module-based architecture | `src/modules`, `src/app/admin`, `src/app/login` | Moi module theo format `components`, `pages`, `services`, `schemas`, `types.ts`, `index.ts` |
+| Auth | React Hook Form, Zod, Redux Toolkit, Axios interceptor, Sonner toast | `src/modules/auth`, `src/store/slices/authSlice.ts`, `src/lib/axios.ts`, `src/app/login/page.tsx`, `src/app/admin/layout.tsx` | Login `/auth/login`, me `/auth/me`, logout `/auth/logout`; guard chi cho ADMIN, STAFF, SUPER_ADMIN |
 | App shell | Next.js App Router, TypeScript, TailwindCSS, shadcn/ui, Lucide React | `src/app`, `src/components/layout`, `src/components/ui` | Layout admin gom sidebar, header, content |
 | Admin menu | Config-driven menu, Lucide React, Next Link | `src/configs/menu.ts`, `src/components/layout/admin-sidebar.tsx` | Sidebar sinh menu theo module va active theo URL |
 | Header | TailwindCSS, Lucide React, shadcn Button, next-themes | `src/components/layout/admin-header.tsx`, `src/components/theme/theme-toggle.tsx` | Co search, theme toggle, thong bao, user menu |
+| Admin UI primitives | shadcn/ui style, Lucide React, TailwindCSS | `src/components/common/breadcrumb.tsx`, `src/components/common/page-header.tsx`, `src/components/common/data-table.tsx`, `src/components/common/confirm-dialog.tsx`, `src/components/common/status-badge.tsx`, `src/components/common/user-dropdown.tsx` | Bo component dung lai cho Breadcrumb, PageHeader, DataTable, ConfirmDialog, StatusBadge, UserDropdown |
+| UI states | App Router loading, DataTable loading/empty/error states | `src/app/admin/loading.tsx`, `src/components/common/data-table.tsx` | Loading route-level va state trong bang du lieu |
 | Theme | next-themes, Tailwind dark mode, shadcn CSS variables | `src/providers/ThemeProvider.tsx`, `src/components/theme`, `src/app/globals.css` | Dark mode dung class strategy |
 | Toast | Sonner | `src/providers/AppProvider.tsx` | Toaster dat o root provider |
 | State management | Redux Toolkit, React Redux | `src/store` | Store typed voi `RootState`, `AppDispatch` |
