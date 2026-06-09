@@ -95,7 +95,7 @@ export function CategoriesPage() {
 
     const payload: CategoryFormPayload = {
       name: values.name,
-      parentId: values.parentId || null,
+      parent: values.parent || null,
       slug: values.slug,
       image: values.image || null,
       sortOrder: values.sortOrder,
@@ -245,7 +245,9 @@ export function CategoriesPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {category.parentId ? parentNameById.get(category.parentId) ?? "Unknown" : "Root"}
+                        {getCategoryParentId(category)
+                          ? parentNameById.get(getCategoryParentId(category)) ?? "Unknown"
+                          : "Root"}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{category.slug}</TableCell>
                       <TableCell>{category.sortOrder}</TableCell>
@@ -331,4 +333,16 @@ function getErrorMessage(error: unknown) {
   }
 
   return "Da co loi xay ra";
+}
+
+function getCategoryParentId(category: Category) {
+  if (category.parentId) {
+    return category.parentId;
+  }
+
+  if (typeof category.parent === "string") {
+    return category.parent;
+  }
+
+  return category.parent?.id ?? "";
 }

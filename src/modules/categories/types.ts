@@ -1,6 +1,7 @@
 export type Category = {
   id: string;
   name: string;
+  parent?: string | Category | null;
   parentId?: string | null;
   slug: string;
   image?: string | null;
@@ -11,7 +12,7 @@ export type Category = {
 
 export type CategoryFormPayload = {
   name: string;
-  parentId?: string | null;
+  parent?: string | null;
   slug: string;
   image?: string | null;
   sortOrder: number;

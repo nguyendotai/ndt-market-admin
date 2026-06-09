@@ -1,36 +1,46 @@
 import { apiClient } from "@/lib/axios";
-import { createCrudService } from "@/services/crud-service";
 import { normalizeBackendResponse } from "@/services/api-response";
 
-export type UploadServiceItem = {
-  id: string;
-  url: string;
-  filename: string;
-  mimeType?: string;
-  size?: number;
+export type UploadFolder =
+  | "product"
+  | "category"
+  | "brand"
+  | "banner"
+  | "article"
+  | "avatar"
+  | "review";
+
+export type UploadImageResponse = {
+  imageUrl: string;
 };
 
-const service = createCrudService<UploadServiceItem, FormData, FormData>("/uploads");
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 export const uploadService = {
-  listUploads: service.list,
-  getUploadById: service.getById,
-  async createUpload(payload: FormData) {
-    const response = await apiClient.post("/uploads", payload, {
+  async uploadImage(file: File, folder: UploadFolder) {
+    validateImageFile(file);
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("folder", folder);
+
+    const response = await apiClient.post("/uploads/image", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    return normalizeBackendResponse<UploadServiceItem>(response.data);
+
+    return normalizeBackendResponse<UploadImageResponse>(response.data);
   },
-  async updateUpload(id: string | number, payload: FormData) {
-    const response = await apiClient.put(`/uploads/${id}`, payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return normalizeBackendResponse<UploadServiceItem>(response.data);
-  },
-  deleteUpload: service.remove,
 };
 
+function validateImageFile(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("Chi ho tro anh jpg, jpeg, png hoac webp");
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error("Dung luong anh toi da la 5MB");
+  }
+}

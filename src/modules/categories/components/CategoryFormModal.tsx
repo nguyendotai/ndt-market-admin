@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Loader2, X } from "lucide-react";
-import { useEffect } from "react";
+import { ImageIcon, Loader2, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
   type CategoryFormInput,
   type CategoryFormValues,
 } from "@/modules/categories";
+import { uploadService } from "@/services/upload.service";
 
 type CategoryFormModalProps = {
   open: boolean;
@@ -25,7 +27,7 @@ type CategoryFormModalProps = {
 
 const defaultValues: CategoryFormInput = {
   name: "",
-  parentId: "",
+  parent: "",
   slug: "",
   image: "",
   sortOrder: 0,
@@ -41,6 +43,7 @@ export function CategoryFormModal({
   onClose,
   onSubmit,
 }: CategoryFormModalProps) {
+  const [uploading, setUploading] = useState(false);
   const {
     formState: { errors },
     handleSubmit,
@@ -61,7 +64,7 @@ export function CategoryFormModal({
       initialValues
         ? {
             name: initialValues.name,
-            parentId: initialValues.parentId ?? "",
+            parent: getCategoryParentId(initialValues) ?? "",
             slug: initialValues.slug,
             image: initialValues.image ?? "",
             sortOrder: initialValues.sortOrder ?? 0,
@@ -84,6 +87,24 @@ export function CategoryFormModal({
   const parentOptions = flattenCategoryOptions(categories).filter(
     (category) => category.id !== initialValues?.id,
   );
+
+  async function handleUploadImage(file?: File) {
+    if (!file) {
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const response = await uploadService.uploadImage(file, "category");
+      setValue("image", response.data.imageUrl, { shouldValidate: true });
+      toast.success("Upload anh danh muc thanh cong");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 px-4">
@@ -124,10 +145,10 @@ export function CategoryFormModal({
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Danh muc cha" error={errors.parentId?.message}>
+            <Field label="Danh muc cha" error={errors.parent?.message}>
               <select
                 className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/30"
-                {...register("parentId")}
+                {...register("parent")}
               >
                 <option value="">Khong co</option>
                 {parentOptions.map((category) => (
@@ -148,14 +169,30 @@ export function CategoryFormModal({
             </Field>
           </div>
 
-          <Field label="Image URL" error={errors.image?.message}>
-            <div className="grid gap-3 md:grid-cols-[1fr_96px]">
-              <input
-                className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/30"
-                placeholder="https://cdn.example.com/category.jpg"
-                {...register("image")}
-              />
-              <div className="flex h-20 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+          <Field label="Hinh anh danh muc" error={errors.image?.message}>
+            <div className="grid gap-3 md:grid-cols-[1fr_120px]">
+              <div className="grid gap-2">
+                <input
+                  className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/30"
+                  placeholder="Cloudinary image URL"
+                  {...register("image")}
+                />
+                <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium hover:bg-muted">
+                  {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                  Upload anh
+                  <input
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="sr-only"
+                    disabled={uploading}
+                    type="file"
+                    onChange={(event) => handleUploadImage(event.target.files?.[0])}
+                  />
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Ho tro jpg, jpeg, png, webp. Toi da 5MB. Anh luu tren Cloudinary folder ndt-market/category.
+                </p>
+              </div>
+              <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg border bg-muted">
                 {image ? (
                   <div
                     aria-label="Category preview"
@@ -225,4 +262,24 @@ function flattenCategoryOptions(categories: Category[], depth = 0): Array<{ id: 
     { id: category.id, label: `${"--".repeat(depth)} ${category.name}`.trim() },
     ...flattenCategoryOptions(category.children ?? [], depth + 1),
   ]);
+}
+
+function getCategoryParentId(category: Category) {
+  if (category.parentId) {
+    return category.parentId;
+  }
+
+  if (typeof category.parent === "string") {
+    return category.parent;
+  }
+
+  return category.parent?.id ?? "";
+}
+
+function getErrorMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message);
+  }
+
+  return "Upload anh that bai";
 }

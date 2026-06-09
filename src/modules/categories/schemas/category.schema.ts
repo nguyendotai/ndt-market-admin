@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const categoryFormSchema = z.object({
   name: z.string().min(2, "Ten danh muc phai co it nhat 2 ky tu"),
-  parentId: z.string().optional().nullable(),
+  parent: z.string().optional().nullable(),
   slug: z
     .string()
     .min(2, "Slug phai co it nhat 2 ky tu")
