@@ -7,6 +7,7 @@ export * from "@/services/brand.service";
 export * from "@/services/category.service";
 export * from "@/services/coupon.service";
 export * from "@/services/crud-service";
+export * from "@/services/dashboard.service";
 export * from "@/services/inventory.service";
 export * from "@/services/order.service";
 export * from "@/services/payment.service";

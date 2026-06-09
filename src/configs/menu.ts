@@ -6,7 +6,7 @@ export type AdminMenuItem = {
 };
 
 export const adminMenu: AdminMenuItem[] = [
-  { title: "Tong quan", href: "/admin", icon: "LayoutDashboard", module: "dashboard" },
+  { title: "Tong quan", href: "/admin/dashboard", icon: "LayoutDashboard", module: "dashboard" },
   { title: "Nguoi dung", href: "/admin/users", icon: "Users", module: "users" },
   { title: "Danh muc", href: "/admin/categories", icon: "Boxes", module: "categories" },
   { title: "Thuong hieu", href: "/admin/brands", icon: "BadgeCheck", module: "brands" },
@@ -22,4 +22,3 @@ export const adminMenu: AdminMenuItem[] = [
   { title: "Bai viet", href: "/admin/articles", icon: "Newspaper", module: "articles" },
   { title: "Cai dat", href: "/admin/settings", icon: "Settings", module: "settings" },
 ];
-

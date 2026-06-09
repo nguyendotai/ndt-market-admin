@@ -30,6 +30,7 @@ Khi them moi hoac thay doi cong nghe cho bat ky chuc nang nao, hay cap nhat bang
 | Service layer | Axios instance, CRUD service factory, normalized backend response | `src/lib/axios.ts`, `src/services/api-response.ts`, `src/services/crud-service.ts`, `src/services/*.service.ts` | BaseURL tu `NEXT_PUBLIC_API_URL`, Bearer token interceptor, response error 401/403/500, helper response `{ success, message, data, meta }` |
 | Form validation | React Hook Form, Zod, `@hookform/resolvers` | `src/modules/products/schemas`, `src/lib/validators.ts` | Schema mau cho product form da chuyen vao module products |
 | Dashboard overview | React Server Components, TailwindCSS, Lucide React | `src/modules/dashboard` | Du lieu hien tai dang la mock UI |
+| Dashboard overview route | Next.js App Router, Recharts, shadcn-style Card/Badge/Table, mock dashboard service | `src/app/admin/dashboard/page.tsx`, `src/modules/dashboard/pages/DashboardPage.tsx`, `src/modules/dashboard/components/DashboardCharts.tsx`, `src/services/dashboard.service.ts` | Route `/admin/dashboard`; mock service can thay bang API that khi backend co thong ke |
 
 ## Template Cho Chuc Nang Moi
 

@@ -1,84 +1,65 @@
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  CircleAlert,
+  Boxes,
   Download,
   LayoutDashboard,
-  PackageCheck,
+  Package,
   Plus,
   ReceiptText,
   Users,
   Wallet,
 } from "lucide-react";
 
-import { DataTable, PageHeader, StatusBadge } from "@/components/common";
+import { PageHeader, StatusBadge } from "@/components/common";
 import { Button } from "@/components/ui/button";
-
-const stats = [
-  {
-    label: "Doanh thu hom nay",
-    value: "128.5 tr",
-    delta: "+12.4%",
-    trend: "up",
-    icon: Wallet,
-  },
-  {
-    label: "Don hang moi",
-    value: "342",
-    delta: "+8.2%",
-    trend: "up",
-    icon: ReceiptText,
-  },
-  {
-    label: "Khach hang",
-    value: "18,420",
-    delta: "+3.1%",
-    trend: "up",
-    icon: Users,
-  },
-  {
-    label: "Can bo sung kho",
-    value: "27",
-    delta: "-4 SKU",
-    trend: "down",
-    icon: CircleAlert,
-  },
-];
-
-const orders: OrderRow[] = [
-  { id: "NDT-10243", customer: "Nguyen Minh Anh", total: "845,000 d", status: "packing" },
-  { id: "NDT-10242", customer: "Tran Quoc Viet", total: "326,000 d", status: "shipping" },
-  { id: "NDT-10241", customer: "Pham Thanh Ha", total: "1,240,000 d", status: "paid" },
-  { id: "NDT-10240", customer: "Le Hoang Nam", total: "219,000 d", status: "pending" },
-];
-
-const lowStock = [
-  { name: "Sua tuoi Vinamilk 1L", stock: 8 },
-  { name: "Trung ga ta hop 10 qua", stock: 12 },
-  { name: "Rau cai ngot 500g", stock: 15 },
-];
-
-type OrderRow = {
-  id: string;
-  customer: string;
-  total: string;
-  status: "packing" | "shipping" | "paid" | "pending";
-};
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DashboardCharts } from "@/modules/dashboard/components/DashboardCharts";
+import { dashboardService, type DashboardOrder } from "@/services/dashboard.service";
 
 const orderStatusMap = {
-  packing: { label: "Dang soan hang", variant: "warning" },
-  shipping: { label: "Cho giao", variant: "info" },
-  paid: { label: "Da thanh toan", variant: "success" },
   pending: { label: "Moi tao", variant: "neutral" },
+  packing: { label: "Dang soan", variant: "warning" },
+  shipping: { label: "Dang giao", variant: "info" },
+  completed: { label: "Hoan tat", variant: "success" },
+  canceled: { label: "Da huy", variant: "danger" },
 } as const;
 
-export function DashboardPage() {
+export async function DashboardPage() {
+  const overview = await dashboardService.getOverview();
+
+  const metrics = [
+    {
+      label: "Tong doanh thu hom nay",
+      value: formatCurrency(overview.metrics.todayRevenue),
+      helper: "Cap nhat theo don hoan tat",
+      icon: Wallet,
+    },
+    {
+      label: "Tong don hang hom nay",
+      value: formatNumber(overview.metrics.todayOrders),
+      helper: "Tat ca trang thai",
+      icon: ReceiptText,
+    },
+    {
+      label: "Tong khach hang",
+      value: formatNumber(overview.metrics.totalCustomers),
+      helper: "Tai khoan dang ky",
+      icon: Users,
+    },
+    {
+      label: "Tong san pham",
+      value: formatNumber(overview.metrics.totalProducts),
+      helper: "SKU dang quan ly",
+      icon: Boxes,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Theo doi doanh thu, don hang, khach hang va ton kho theo thoi gian thuc."
+        description="Theo doi doanh thu, don hang, khach hang, san pham va ton kho cua sieu thi online."
         icon={LayoutDashboard}
-        title="Bang dieu khien sieu thi online"
+        title="Dashboard Overview"
         actions={
           <>
             <Button className="gap-2" variant="outline">
@@ -94,98 +75,114 @@ export function DashboardPage() {
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <stat.icon className="size-5" />
+        {metrics.map((metric) => (
+          <Card key={metric.label}>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <metric.icon className="size-5" />
               </div>
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                {stat.trend === "up" ? (
-                  <ArrowUpRight className="size-3.5 text-emerald-600" />
-                ) : (
-                  <ArrowDownRight className="size-3.5 text-amber-600" />
-                )}
-                {stat.delta}
-              </span>
-            </div>
-            <p className="mt-5 text-sm text-muted-foreground">{stat.label}</p>
-            <p className="mt-1 text-2xl font-semibold">{stat.value}</p>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{metric.label}</p>
+              <p className="mt-2 text-2xl font-semibold">{metric.value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{metric.helper}</p>
+            </CardContent>
+          </Card>
         ))}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <DataTable<OrderRow>
-          columns={[
-            { key: "id", header: "Ma don", cell: (row) => <span className="font-medium">{row.id}</span> },
-            { key: "customer", header: "Khach hang" },
-            { key: "total", header: "Tong tien", cell: (row) => <span className="font-medium">{row.total}</span> },
-            {
-              key: "status",
-              header: "Trang thai",
-              cell: (row) => {
-                const status = orderStatusMap[row.status];
-                return <StatusBadge label={status.label} variant={status.variant} />;
-              },
-            },
-          ]}
-          data={orders}
-          emptyTitle="Chua co don hang"
-          getRowKey={(row) => row.id}
-        />
+      <DashboardCharts
+        revenueData={overview.revenueLast7Days}
+        statusData={overview.ordersByStatus}
+      />
 
-        <div className="rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-md bg-amber-500/15 text-amber-600">
-              <PackageCheck className="size-5" />
+      <section className="grid gap-4 xl:grid-cols-[1fr_420px]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Don hang moi nhat</CardTitle>
+            <CardDescription>Nhung don hang vua duoc tao hoac cap nhat gan day.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ma don</TableHead>
+                  <TableHead>Khach hang</TableHead>
+                  <TableHead>Tong tien</TableHead>
+                  <TableHead>Trang thai</TableHead>
+                  <TableHead>Thoi gian</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {overview.latestOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{order.customerName}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(order.total)}</TableCell>
+                    <TableCell>
+                      <OrderStatusBadge order={order} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{order.createdAt}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
+                <Package className="size-5" />
+              </div>
+              <div>
+                <CardTitle>San pham sap het hang</CardTitle>
+                <CardDescription>Can uu tien nhap kho trong hom nay.</CardDescription>
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-semibold">Can nhap them</h2>
-              <p className="text-sm text-muted-foreground">Uu tien trong hom nay</p>
-            </div>
-          </div>
-          <div className="mt-5 space-y-3">
-            {lowStock.map((item) => (
-              <div key={item.name} className="flex items-center justify-between rounded-md border p-3">
-                <p className="text-sm font-medium">{item.name}</p>
-                <span className="text-sm text-muted-foreground">{item.stock} con</span>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {overview.lowStockProducts.map((product) => (
+              <div key={product.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{product.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{product.sku}</p>
+                  </div>
+                  <StatusBadge label={`${product.stock} con`} variant="warning" />
+                </div>
+                <div className="mt-3 h-2 rounded-full bg-muted">
+                  <div
+                    className="h-2 rounded-full bg-primary"
+                    style={{
+                      width: `${Math.min((product.stock / product.threshold) * 100, 100)}%`,
+                    }}
+                  />
+                </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-3">
-        <DataTable<OrderRow>
-          columns={[
-            { key: "id", header: "Ma don" },
-            { key: "customer", header: "Khach hang" },
-          ]}
-          data={[]}
-          getRowKey={(row) => row.id}
-          loading
-        />
-        <DataTable<OrderRow>
-          columns={[
-            { key: "id", header: "Ma don" },
-            { key: "customer", header: "Khach hang" },
-          ]}
-          data={[]}
-          emptyTitle="Chua co khuyen mai"
-          emptyDescription="Tao chuong trinh khuyen mai de hien thi tai day."
-          getRowKey={(row) => row.id}
-        />
-        <DataTable<OrderRow>
-          columns={[
-            { key: "id", header: "Ma don" },
-            { key: "customer", header: "Khach hang" },
-          ]}
-          data={[]}
-          error="May chu dang ban, vui long thu lai sau vai giay."
-          getRowKey={(row) => row.id}
-        />
+          </CardContent>
+        </Card>
       </section>
     </div>
   );
 }
+
+function OrderStatusBadge({ order }: { order: DashboardOrder }) {
+  const status = orderStatusMap[order.status];
+  return <StatusBadge label={status.label} variant={status.variant} />;
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("vi-VN", {
+    currency: "VND",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("vi-VN").format(value);
+}
+

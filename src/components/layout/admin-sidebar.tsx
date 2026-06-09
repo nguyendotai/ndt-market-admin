@@ -60,10 +60,7 @@ export function AdminSidebar() {
       <nav className="h-[calc(100dvh-4rem)] space-y-1 overflow-y-auto px-3 py-4">
         {adminMenu.map((item) => {
           const Icon = iconMap[item.icon as keyof typeof iconMap] ?? LayoutDashboard;
-          const isActive =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
+          const isActive = pathname.startsWith(item.href);
 
           return (
             <Link
