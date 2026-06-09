@@ -31,6 +31,7 @@ Khi them moi hoac thay doi cong nghe cho bat ky chuc nang nao, hay cap nhat bang
 | Form validation | React Hook Form, Zod, `@hookform/resolvers` | `src/modules/products/schemas`, `src/lib/validators.ts` | Schema mau cho product form da chuyen vao module products |
 | Dashboard overview | React Server Components, TailwindCSS, Lucide React | `src/modules/dashboard` | Du lieu hien tai dang la mock UI |
 | Dashboard overview route | Next.js App Router, Recharts, shadcn-style Card/Badge/Table, mock dashboard service | `src/app/admin/dashboard/page.tsx`, `src/modules/dashboard/pages/DashboardPage.tsx`, `src/modules/dashboard/components/DashboardCharts.tsx`, `src/services/dashboard.service.ts` | Route `/admin/dashboard`; mock service can thay bang API that khi backend co thong ke |
+| Categories management | React Hook Form, Zod, Axios service, shadcn-style Card/Table/Badge, Sonner toast | `src/app/admin/categories/page.tsx`, `src/modules/categories`, `src/services/category.service.ts` | Quan ly danh muc cha/con, search, filter active, create/edit/delete, image URL, auto slug, toggle active |
 
 ## Template Cho Chuc Nang Moi
 
