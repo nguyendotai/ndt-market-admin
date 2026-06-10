@@ -17,11 +17,11 @@ import { DashboardCharts } from "@/modules/dashboard/components/DashboardCharts"
 import { dashboardService, type DashboardOrder } from "@/services/dashboard.service";
 
 const orderStatusMap = {
-  pending: { label: "Moi tao", variant: "neutral" },
-  packing: { label: "Dang soan", variant: "warning" },
-  shipping: { label: "Dang giao", variant: "info" },
-  completed: { label: "Hoan tat", variant: "success" },
-  canceled: { label: "Da huy", variant: "danger" },
+  PENDING: { label: "Moi tao", variant: "neutral" },
+  PREPARING: { label: "Dang soan", variant: "warning" },
+  SHIPPING: { label: "Dang giao", variant: "info" },
+  COMPLETED: { label: "Hoan tat", variant: "success" },
+  CANCELLED: { label: "Da huy", variant: "danger" },
 } as const;
 
 export async function DashboardPage() {
@@ -185,4 +185,3 @@ function formatCurrency(value: number) {
 function formatNumber(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value);
 }
-

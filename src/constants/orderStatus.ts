@@ -1,11 +1,11 @@
 export const ORDER_STATUS = {
-  PENDING: "pending",
-  CONFIRMED: "confirmed",
-  PACKING: "packing",
-  SHIPPING: "shipping",
-  COMPLETED: "completed",
-  CANCELED: "canceled",
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  PREPARING: "PREPARING",
+  SHIPPING: "SHIPPING",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+  REFUNDED: "REFUNDED",
 } as const;
 
 export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
-

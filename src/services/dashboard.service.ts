@@ -11,7 +11,7 @@ export type DashboardOrder = {
   id: string;
   customerName: string;
   total: number;
-  status: "pending" | "packing" | "shipping" | "completed" | "canceled";
+  status: "PENDING" | "PREPARING" | "SHIPPING" | "COMPLETED" | "CANCELLED";
   createdAt: string;
 };
 
@@ -49,11 +49,11 @@ const mockDashboardOverview: DashboardOverview = {
     totalProducts: 6_842,
   },
   latestOrders: [
-    { id: "NDT-10243", customerName: "Nguyen Minh Anh", total: 845_000, status: "packing", createdAt: "2026-06-09 10:24" },
-    { id: "NDT-10242", customerName: "Tran Quoc Viet", total: 326_000, status: "shipping", createdAt: "2026-06-09 10:02" },
-    { id: "NDT-10241", customerName: "Pham Thanh Ha", total: 1_240_000, status: "completed", createdAt: "2026-06-09 09:51" },
-    { id: "NDT-10240", customerName: "Le Hoang Nam", total: 219_000, status: "pending", createdAt: "2026-06-09 09:38" },
-    { id: "NDT-10239", customerName: "Do Nhu Quynh", total: 512_000, status: "canceled", createdAt: "2026-06-09 09:21" },
+    { id: "NDT-10243", customerName: "Nguyen Minh Anh", total: 845_000, status: "PREPARING", createdAt: "2026-06-09 10:24" },
+    { id: "NDT-10242", customerName: "Tran Quoc Viet", total: 326_000, status: "SHIPPING", createdAt: "2026-06-09 10:02" },
+    { id: "NDT-10241", customerName: "Pham Thanh Ha", total: 1_240_000, status: "COMPLETED", createdAt: "2026-06-09 09:51" },
+    { id: "NDT-10240", customerName: "Le Hoang Nam", total: 219_000, status: "PENDING", createdAt: "2026-06-09 09:38" },
+    { id: "NDT-10239", customerName: "Do Nhu Quynh", total: 512_000, status: "CANCELLED", createdAt: "2026-06-09 09:21" },
   ],
   lowStockProducts: [
     { id: "P-1001", name: "Sua tuoi Vinamilk 1L", sku: "MILK-VNM-1L", stock: 8, threshold: 20 },
@@ -90,4 +90,3 @@ export const dashboardService = {
     }).data;
   },
 };
-
