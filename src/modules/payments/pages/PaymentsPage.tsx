@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckCircle2, Loader2, RotateCcw, Search, WalletCards } from "lucide-react";
+import { CheckCircle2, RotateCcw, Search, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { ConfirmDialog, PageHeader, StatusBadge } from "@/components/common";
+import { ConfirmDialog, PageHeader, Pagination, StatusBadge, TableSkeleton } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -178,9 +178,7 @@ export function PaymentsPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="grid min-h-80 place-items-center">
-              <Loader2 className="size-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton columns={7} rows={7} />
           ) : (
             <Table className="min-w-[980px]">
               <TableHeader>
@@ -250,15 +248,13 @@ export function PaymentsPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Trang {page}{meta?.totalPages ? ` / ${meta.totalPages}` : ""}
-        </p>
-        <div className="flex gap-2">
-          <Button disabled={page === 1} variant="outline" onClick={() => setPage((value) => Math.max(value - 1, 1))}>Truoc</Button>
-          <Button disabled={!hasNextPage} variant="outline" onClick={() => setPage((value) => value + 1)}>Sau</Button>
-        </div>
-      </div>
+      <Pagination
+        hasNextPage={hasNextPage}
+        loading={loading}
+        page={page}
+        totalPages={totalPages || undefined}
+        onPageChange={setPage}
+      />
 
       <ConfirmDialog
         description={getConfirmDescription(pendingAction)}

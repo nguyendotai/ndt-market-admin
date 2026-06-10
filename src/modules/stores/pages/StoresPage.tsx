@@ -18,6 +18,7 @@ export function StoresPage() {
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [editingStore, setEditingStore] = useState<StoreItem | null>(null);
   const [deletingStore, setDeletingStore] = useState<StoreItem | null>(null);
+  const [togglingStore, setTogglingStore] = useState<StoreItem | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -115,12 +116,14 @@ export function StoresPage() {
     }
   }
 
-  async function handleToggleStatus(store: StoreItem) {
-    const nextStatus: StoreStatus = store.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+  async function handleToggleStatus() {
+    if (!togglingStore) return;
+    const nextStatus: StoreStatus = togglingStore.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
     try {
-      await storeService.updateStore(getEntityId(store), { status: nextStatus });
+      await storeService.updateStore(getEntityId(togglingStore), { status: nextStatus });
       toast.success(nextStatus === "ACTIVE" ? "Da bat cua hang" : "Da tat cua hang");
+      setTogglingStore(null);
       await loadStores();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -220,7 +223,7 @@ export function StoresPage() {
                       </TableCell>
                       <TableCell>{store.openingHours || "-"}</TableCell>
                       <TableCell>
-                        <button type="button" onClick={() => handleToggleStatus(store)}>
+                        <button type="button" onClick={() => setTogglingStore(store)}>
                           <StatusBadge
                             label={store.status}
                             variant={store.status === "ACTIVE" ? "success" : "neutral"}
@@ -281,6 +284,17 @@ export function StoresPage() {
           if (!open) {
             setDeletingStore(null);
           }
+        }}
+      />
+
+      <ConfirmDialog
+        description={`Ban co chac muon ${togglingStore?.status === "ACTIVE" ? "tat" : "bat"} cua hang "${togglingStore?.name ?? ""}"?`}
+        open={Boolean(togglingStore)}
+        title="Cap nhat trang thai cua hang"
+        confirmText="Xac nhan"
+        onConfirm={handleToggleStatus}
+        onOpenChange={(open) => {
+          if (!open) setTogglingStore(null);
         }}
       />
     </div>

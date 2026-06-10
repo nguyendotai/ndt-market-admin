@@ -85,7 +85,7 @@ export function CategoryFormModal({
   }
 
   const parentOptions = flattenCategoryOptions(categories).filter(
-    (category) => category.id !== initialValues?.id,
+    (category) => category.id !== initialValues?._id,
   );
 
   async function handleUploadImage(file?: File) {
@@ -259,7 +259,7 @@ function generateSlug(value: string) {
 
 function flattenCategoryOptions(categories: Category[], depth = 0): Array<{ id: string; label: string }> {
   return categories.flatMap((category) => [
-    { id: category.id, label: `${"--".repeat(depth)} ${category.name}`.trim() },
+    { id: category._id, label: `${"--".repeat(depth)} ${category.name}`.trim() },
     ...flattenCategoryOptions(category.children ?? [], depth + 1),
   ]);
 }
@@ -273,7 +273,7 @@ function getCategoryParentId(category: Category) {
     return category.parent;
   }
 
-  return category.parent?.id ?? "";
+  return category.parent?._id ?? "";
 }
 
 function getErrorMessage(error: unknown) {

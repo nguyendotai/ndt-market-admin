@@ -32,7 +32,7 @@ import { categoryService } from "@/services/category.service";
 import { productService } from "@/services/product.service";
 
 type ProductFormPageProps = {
-  productId?: string;
+  productSlug?: string;
 };
 
 const defaultValues: ProductFormInput = {
@@ -51,9 +51,10 @@ const defaultValues: ProductFormInput = {
   status: "DRAFT",
 };
 
-export function ProductFormPage({ productId }: ProductFormPageProps) {
-  const isEdit = Boolean(productId);
+export function ProductFormPage({ productSlug }: ProductFormPageProps) {
+  const isEdit = Boolean(productSlug);
   const router = useRouter();
+  const [productId, setProductId] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -63,7 +64,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   const [deletingImage, setDeletingImage] = useState<ProductImage | null>(null);
   const [variantModalOpen, setVariantModalOpen] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const [loading, setLoading] = useState(Boolean(productId));
+  const [loading, setLoading] = useState(Boolean(productSlug));
   const [submitting, setSubmitting] = useState(false);
   const [variantSubmitting, setVariantSubmitting] = useState(false);
   const [imageSubmitting, setImageSubmitting] = useState(false);
@@ -100,18 +101,20 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     }
   }
 
-  async function loadProduct(id: string) {
+  async function loadProduct(slug: string) {
     setLoading(true);
+    setProductId(null);
 
     try {
-      const response = await productService.getProductById(id);
+      const response = await productService.getProductBySlug(slug);
       const item = response.data;
+      setProductId(getEntityId(item));
       setVariants(item.variants ?? []);
       setImages(item.images ?? []);
       reset({
         name: item.name,
         slug: item.slug,
-        sku: item.sku,
+        sku: item.sku ?? "",
         category: getRefId(item.category),
         brand: getRefId(item.brand),
         description: item.description ?? "",
@@ -133,15 +136,15 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       loadOptions();
-      if (productId) {
-        loadProduct(productId);
+      if (productSlug) {
+        loadProduct(productSlug);
       }
     }, 0);
 
     return () => window.clearTimeout(timer);
     // loadOptions/loadProduct are intentionally scheduled once per productId.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
+  }, [productSlug]);
 
   async function onSubmit(values: ProductFormValues) {
     setSubmitting(true);
@@ -149,7 +152,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     const payload: ProductFormPayload = {
       name: values.name,
       slug: values.slug,
-      sku: values.sku,
+      sku: emptyToUndefined(values.sku),
       category: values.category,
       brand: values.brand,
       description: emptyToUndefined(values.description),
@@ -163,7 +166,12 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     };
 
     try {
-      if (productId) {
+      if (isEdit) {
+        if (!productId) {
+          toast.error("Khong tim thay ID san pham de cap nhat");
+          return;
+        }
+
         const response = await productService.updateProduct(productId, payload);
         setVariants(response.data.variants ?? variants);
         setImages(response.data.images ?? images);
@@ -171,7 +179,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       } else {
         const response = await productService.createProduct(payload);
         toast.success("Tao san pham thanh cong");
-        router.replace(`/admin/products/${getEntityId(response.data)}/edit`);
+        router.replace(`/admin/products/${response.data.slug || values.slug}/edit`);
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -181,7 +189,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   async function handleVariantSubmit(values: ProductVariantFormValues) {
-    if (!productId) {
+    if (!productId || !productSlug) {
       toast.error("Vui long luu san pham truoc khi them variant");
       return;
     }
@@ -199,7 +207,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
       setVariantModalOpen(false);
       setEditingVariant(null);
-      await loadProduct(productId);
+      await loadProduct(productSlug);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -208,7 +216,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   async function handleImageSubmit(values: ProductImageFormValues) {
-    if (!productId) {
+    if (!productId || !productSlug) {
       toast.error("Vui long luu san pham truoc khi them anh");
       return;
     }
@@ -219,7 +227,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       await productService.createImage(productId, values);
       toast.success("Them anh san pham thanh cong");
       setImageModalOpen(false);
-      await loadProduct(productId);
+      await loadProduct(productSlug);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -228,7 +236,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
   }
 
   async function handleDeleteVariant() {
-    if (!deletingVariant || !productId) {
+    if (!deletingVariant || !productSlug) {
       return;
     }
 
@@ -236,14 +244,14 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       await productService.deleteVariant(getEntityId(deletingVariant));
       toast.success("Da xoa variant");
       setDeletingVariant(null);
-      await loadProduct(productId);
+      await loadProduct(productSlug);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }
 
   async function handleDeleteImage() {
-    if (!deletingImage || !productId) {
+    if (!deletingImage || !productSlug) {
       return;
     }
 
@@ -251,7 +259,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       await productService.deleteImage(getEntityId(deletingImage));
       toast.success("Da xoa anh san pham");
       setDeletingImage(null);
-      await loadProduct(productId);
+      await loadProduct(productSlug);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -295,7 +303,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("slug")} />
             </Field>
             <Field error={errors.sku?.message} label="SKU">
-              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("sku")} />
+              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="Bo trong de backend tu sinh" {...register("sku")} />
             </Field>
             <Field error={errors.category?.message} label="Danh muc">
               <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("category")}>
@@ -388,6 +396,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Anh</TableHead>
                   <TableHead>Ten</TableHead>
                   <TableHead>Barcode</TableHead>
                   <TableHead>Gia</TableHead>
@@ -399,12 +408,15 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
               <TableBody>
                 {variants.map((variant) => (
                   <TableRow key={getEntityId(variant)}>
+                    <TableCell>
+                      <VariantThumb variant={variant} />
+                    </TableCell>
                     <TableCell className="font-medium">{variant.name}</TableCell>
                     <TableCell className="font-mono text-xs">{variant.barcode || "-"}</TableCell>
                     <TableCell>{formatCurrency(variant.price)}</TableCell>
                     <TableCell>{variant.salePrice ? formatCurrency(variant.salePrice) : "-"}</TableCell>
                     <TableCell>
-                      <StatusBadge label={variant.status} variant={variant.status === "ACTIVE" ? "success" : "neutral"} />
+                      <StatusBadge label={variant.status} variant={getVariantStatusBadgeVariant(variant.status)} />
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -518,6 +530,23 @@ function EmptyHint({ text }: { text: string }) {
   return <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">{text}</div>;
 }
 
+function VariantThumb({ variant }: { variant: ProductVariant }) {
+  return (
+    <div className="flex size-11 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+      {variant.imageUrl ? (
+        <div
+          aria-label={variant.name}
+          className="h-full w-full bg-cover bg-center"
+          role="img"
+          style={{ backgroundImage: `url(${variant.imageUrl})` }}
+        />
+      ) : (
+        <ImageIcon className="size-4 text-muted-foreground" />
+      )}
+    </div>
+  );
+}
+
 function flattenCategories(categories: Category[]): Category[] {
   return categories.flatMap((category) => [category, ...flattenCategories(category.children ?? [])]);
 }
@@ -548,12 +577,19 @@ function normalizeVariant(values: ProductVariantFormValues) {
   return {
     name: values.name,
     barcode: emptyToUndefined(values.barcode),
+    imageUrl: emptyToUndefined(values.imageUrl),
     price: values.price,
     salePrice: values.salePrice || undefined,
     weight: values.weight || undefined,
     unit: emptyToUndefined(values.unit),
     status: values.status,
   };
+}
+
+function getVariantStatusBadgeVariant(status: ProductVariant["status"]) {
+  if (status === "ACTIVE") return "success";
+  if (status === "OUT_OF_STOCK") return "warning";
+  return "neutral";
 }
 
 function generateSlug(value: string) {

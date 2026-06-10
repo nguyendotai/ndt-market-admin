@@ -1,20 +1,29 @@
-import { createCrudService } from "@/services/crud-service";
+import { apiClient } from "@/lib/axios";
+import type { Review, ReviewStatus } from "@/modules/reviews";
+import { normalizeBackendResponse } from "@/services/api-response";
 
-export type ReviewServiceItem = {
-  id: string;
-  productId: string;
-  customerId: string;
-  rating: number;
-  content: string;
+export type ReviewListParams = {
+  keyword?: string;
+  rating?: number | "all";
+  status?: ReviewStatus | "all";
+  page?: number;
+  limit?: number;
 };
-
-const service = createCrudService<ReviewServiceItem>("/reviews");
 
 export const reviewService = {
-  listReviews: service.list,
-  getReviewById: service.getById,
-  createReview: service.create,
-  updateReview: service.update,
-  deleteReview: service.remove,
-};
+  async listReviews(params?: ReviewListParams) {
+    const response = await apiClient.get("/admin/reviews", {
+      params: {
+        ...params,
+        rating: params?.rating === "all" ? undefined : params?.rating,
+        status: params?.status === "all" ? undefined : params?.status,
+      },
+    });
+    return normalizeBackendResponse<Review[]>(response.data);
+  },
 
+  async updateReviewStatus(id: string, status: ReviewStatus) {
+    const response = await apiClient.patch(`/admin/reviews/${id}/status`, { status });
+    return normalizeBackendResponse<Review>(response.data);
+  },
+};

@@ -1,20 +1,35 @@
-import { createCrudService } from "@/services/crud-service";
+import { apiClient } from "@/lib/axios";
+import type { Promotion, PromotionFormPayload, PromotionStatus } from "@/modules/promotions";
+import { normalizeBackendResponse } from "@/services/api-response";
 
-export type PromotionServiceItem = {
-  id: string;
-  name: string;
-  startsAt: string;
-  endsAt: string;
-  isActive: boolean;
+export type PromotionListParams = {
+  keyword?: string;
+  status?: PromotionStatus | "all";
 };
-
-const service = createCrudService<PromotionServiceItem>("/promotions");
 
 export const promotionService = {
-  listPromotions: service.list,
-  getPromotionById: service.getById,
-  createPromotion: service.create,
-  updatePromotion: service.update,
-  deletePromotion: service.remove,
-};
+  async listPromotions(params?: PromotionListParams) {
+    const response = await apiClient.get("/promotions", {
+      params: {
+        ...params,
+        status: params?.status === "all" ? undefined : params?.status,
+      },
+    });
+    return normalizeBackendResponse<Promotion[]>(response.data);
+  },
 
+  async createPromotion(payload: PromotionFormPayload) {
+    const response = await apiClient.post("/admin/promotions", payload);
+    return normalizeBackendResponse<Promotion>(response.data);
+  },
+
+  async updatePromotion(id: string, payload: Partial<PromotionFormPayload>) {
+    const response = await apiClient.patch(`/admin/promotions/${id}`, payload);
+    return normalizeBackendResponse<Promotion>(response.data);
+  },
+
+  async deletePromotion(id: string) {
+    const response = await apiClient.delete(`/admin/promotions/${id}`);
+    return normalizeBackendResponse<null>(response.data);
+  },
+};

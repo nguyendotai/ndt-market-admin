@@ -1,5 +1,5 @@
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
-export type ProductVariantStatus = "ACTIVE" | "INACTIVE";
+export type ProductVariantStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
 
 export type ProductCategoryRef = {
   _id?: string;
@@ -21,6 +21,7 @@ export type ProductVariant = {
   id: string;
   name: string;
   barcode?: string | null;
+  imageUrl?: string | null;
   price: number;
   salePrice?: number | null;
   weight?: number | null;
@@ -63,7 +64,7 @@ export type Product = {
 export type ProductFormPayload = {
   name: string;
   slug: string;
-  sku: string;
+  sku?: string;
   category: string;
   brand: string;
   description?: string | null;
@@ -79,6 +80,7 @@ export type ProductFormPayload = {
 export type ProductVariantPayload = {
   name: string;
   barcode?: string | null;
+  imageUrl?: string | null;
   price: number;
   salePrice?: number | null;
   weight?: number | null;

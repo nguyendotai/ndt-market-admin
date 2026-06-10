@@ -1,8 +1,18 @@
+import type { UserRole, UserStatus } from "@/modules/users";
+
 export type AuthUser = {
-  id: string;
-  name: string;
+  _id?: string;
+  id?: string;
+  name?: string;
+  fullName?: string;
   email: string;
-  role: string;
+  phone?: string;
+  avatar?: string | null;
+  role: UserRole;
+  permissions?: string[];
+  status?: UserStatus;
+  membershipTier?: string;
+  totalPoints?: number;
 };
 
 export type LoginRequest = {
@@ -22,6 +32,21 @@ export type LoginResponse = {
     token?: string;
     user?: AuthUser;
   };
+};
+
+export type RegisterRequest = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  fullName?: string;
+  phone?: string;
+  avatar?: string;
+};
+
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 };
 
 export type AuthState = {

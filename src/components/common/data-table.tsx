@@ -1,5 +1,7 @@
-import { AlertCircle, Inbox, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
+import { EmptyState } from "@/components/common/empty-state";
+import { TableSkeleton } from "@/components/common/loading-skeleton";
 import { cn } from "@/lib/utils";
 
 type DataTableColumn<T> = {
@@ -46,12 +48,8 @@ export function DataTable<T extends object>({
           <tbody className="divide-y">
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="px-5 py-12">
-                  <StateMessage
-                    description="Dang tai du lieu moi nhat..."
-                    icon={<Loader2 className="size-5 animate-spin" />}
-                    title="Dang tai"
-                  />
+                <td colSpan={columns.length}>
+                  <TableSkeleton columns={Math.min(columns.length, 6)} />
                 </td>
               </tr>
             ) : error ? (
@@ -69,7 +67,6 @@ export function DataTable<T extends object>({
                 <td colSpan={columns.length} className="px-5 py-12">
                   <StateMessage
                     description={emptyDescription}
-                    icon={<Inbox className="size-5" />}
                     title={emptyTitle}
                   />
                 </td>
@@ -99,17 +96,9 @@ function StateMessage({
   title,
   description,
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   title: string;
   description: string;
 }) {
-  return (
-    <div className="mx-auto flex max-w-sm flex-col items-center text-center">
-      <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
-        {icon}
-      </div>
-      <p className="font-medium">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
-    </div>
-  );
+  return <EmptyState description={description} icon={icon} title={title} />;
 }

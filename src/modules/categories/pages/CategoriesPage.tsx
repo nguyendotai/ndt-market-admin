@@ -25,7 +25,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CategoryFormModal } from "@/modules/categories/components/CategoryFormModal";
-import type { Category, CategoryFormPayload, CategoryFormValues } from "@/modules/categories";
+import type {
+  Category,
+  CategoryFormPayload,
+  CategoryFormValues,
+} from "@/modules/categories";
 import { categoryService } from "@/services/category.service";
 
 type ActiveFilter = "all" | "active" | "inactive";
@@ -34,7 +38,10 @@ export function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryTree, setCategoryTree] = useState<Category[]>([]);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(
+    null,
+  );
+  const [togglingCategory, setTogglingCategory] = useState<Category | null>(null);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -67,10 +74,13 @@ export function CategoriesPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const flatTree = useMemo(() => flattenCategories(categoryTree), [categoryTree]);
+  const flatTree = useMemo(
+    () => flattenCategories(categoryTree),
+    [categoryTree],
+  );
   const parentNameById = useMemo(() => {
     const map = new Map<string, string>();
-    categories.forEach((category) => map.set(category.id, category.name));
+    categories.forEach((category) => map.set(category._id, category.name));
     return map;
   }, [categories]);
 
@@ -104,7 +114,7 @@ export function CategoriesPage() {
 
     try {
       if (editingCategory) {
-        await categoryService.updateCategory(editingCategory.id, payload);
+        await categoryService.updateCategory(editingCategory._id, payload);
         toast.success("Cap nhat danh muc thanh cong");
       } else {
         await categoryService.createCategory(payload);
@@ -127,7 +137,7 @@ export function CategoriesPage() {
     }
 
     try {
-      await categoryService.deleteCategory(deletingCategory.id);
+      await categoryService.deleteCategory(deletingCategory._id);
       toast.success("Da xoa danh muc");
       setDeletingCategory(null);
       await loadCategories();
@@ -136,12 +146,15 @@ export function CategoriesPage() {
     }
   }
 
-  async function handleToggleActive(category: Category) {
+  async function handleToggleActive() {
+    if (!togglingCategory) return;
+
     try {
-      await categoryService.updateCategory(category.id, {
-        isActive: !category.isActive,
+      await categoryService.updateCategory(togglingCategory._id, {
+        isActive: !togglingCategory.isActive,
       });
-      toast.success(category.isActive ? "Da tat danh muc" : "Da bat danh muc");
+      toast.success(togglingCategory.isActive ? "Da tat danh muc" : "Da bat danh muc");
+      setTogglingCategory(null);
       await loadCategories();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -185,7 +198,9 @@ export function CategoriesPage() {
               <select
                 className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-3 focus:ring-ring/30"
                 value={activeFilter}
-                onChange={(event) => setActiveFilter(event.target.value as ActiveFilter)}
+                onChange={(event) =>
+                  setActiveFilter(event.target.value as ActiveFilter)
+                }
               >
                 <option value="all">Tat ca</option>
                 <option value="active">Active</option>
@@ -217,22 +232,30 @@ export function CategoriesPage() {
               <TableBody>
                 {visibleCategories.length === 0 ? (
                   <TableRow>
-                    <TableCell className="py-12 text-center text-muted-foreground" colSpan={6}>
+                    <TableCell
+                      className="py-12 text-center text-muted-foreground"
+                      colSpan={6}
+                    >
                       Khong tim thay danh muc phu hop.
                     </TableCell>
                   </TableRow>
                 ) : (
                   visibleCategories.map(({ category, depth }) => (
-                    <TableRow key={category.id}>
+                    <TableRow key={category._id}>
                       <TableCell>
-                        <div className="flex items-center gap-3" style={{ paddingLeft: depth * 20 }}>
+                        <div
+                          className="flex items-center gap-3"
+                          style={{ paddingLeft: depth * 20 }}
+                        >
                           <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg border bg-muted">
                             {category.image ? (
                               <div
                                 aria-label={category.name}
                                 className="h-full w-full bg-cover bg-center"
                                 role="img"
-                                style={{ backgroundImage: `url(${category.image})` }}
+                                style={{
+                                  backgroundImage: `url(${category.image})`,
+                                }}
                               />
                             ) : (
                               <ImageIcon className="size-4 text-muted-foreground" />
@@ -240,19 +263,28 @@ export function CategoriesPage() {
                           </div>
                           <div>
                             <p className="font-medium">{category.name}</p>
-                            {depth > 0 ? <Badge variant="secondary">Cap {depth + 1}</Badge> : null}
+                            {depth > 0 ? (
+                              <Badge variant="secondary">Cap {depth + 1}</Badge>
+                            ) : null}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {getCategoryParentId(category)
-                          ? parentNameById.get(getCategoryParentId(category)) ?? "Unknown"
+                          ? (parentNameById.get(
+                              getCategoryParentId(category),
+                            ) ?? "Unknown")
                           : "Root"}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{category.slug}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {category.slug}
+                      </TableCell>
                       <TableCell>{category.sortOrder}</TableCell>
                       <TableCell>
-                        <button type="button" onClick={() => handleToggleActive(category)}>
+                        <button
+                          type="button"
+                          onClick={() => setTogglingCategory(category)}
+                        >
                           <StatusBadge
                             label={category.isActive ? "Active" : "Inactive"}
                             variant={category.isActive ? "success" : "neutral"}
@@ -316,11 +348,25 @@ export function CategoriesPage() {
           }
         }}
       />
+
+      <ConfirmDialog
+        description={`Ban co chac muon ${togglingCategory?.isActive ? "tat" : "bat"} danh muc "${togglingCategory?.name ?? ""}"?`}
+        open={Boolean(togglingCategory)}
+        title="Cap nhat trang thai danh muc"
+        confirmText="Xac nhan"
+        onConfirm={handleToggleActive}
+        onOpenChange={(open) => {
+          if (!open) setTogglingCategory(null);
+        }}
+      />
     </div>
   );
 }
 
-function flattenCategories(categories: Category[], depth = 0): Array<{ category: Category; depth: number }> {
+function flattenCategories(
+  categories: Category[],
+  depth = 0,
+): Array<{ category: Category; depth: number }> {
   return categories.flatMap((category) => [
     { category, depth },
     ...flattenCategories(category.children ?? [], depth + 1),
@@ -344,5 +390,5 @@ function getCategoryParentId(category: Category) {
     return category.parent;
   }
 
-  return category.parent?.id ?? "";
+  return category.parent?._id ?? "";
 }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const productStatusSchema = z.enum(["DRAFT", "ACTIVE", "INACTIVE", "OUT_OF_STOCK"]);
-export const productVariantStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
+export const productVariantStatusSchema = z.enum(["ACTIVE", "INACTIVE", "OUT_OF_STOCK"]);
 
 export const productFormSchema = z.object({
   name: z.string().min(2, "Ten san pham phai co it nhat 2 ky tu"),
@@ -9,7 +9,7 @@ export const productFormSchema = z.object({
     .string()
     .min(2, "Slug phai co it nhat 2 ky tu")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chi gom chu thuong, so va dau gach ngang"),
-  sku: z.string().min(2, "SKU khong duoc de trong"),
+  sku: z.string().optional(),
   category: z.string().min(1, "Vui long chon danh muc"),
   brand: z.string().min(1, "Vui long chon thuong hieu"),
   description: z.string().optional(),
@@ -22,15 +22,21 @@ export const productFormSchema = z.object({
   status: productStatusSchema.default("DRAFT"),
 });
 
-export const productVariantFormSchema = z.object({
-  name: z.string().min(1, "Ten variant khong duoc de trong"),
-  barcode: z.string().optional(),
-  price: z.coerce.number().positive("Gia ban phai lon hon 0"),
-  salePrice: z.coerce.number().min(0, "Gia khuyen mai khong duoc am").optional(),
-  weight: z.coerce.number().min(0, "Khoi luong khong duoc am").optional(),
-  unit: z.string().optional(),
-  status: productVariantStatusSchema.default("ACTIVE"),
-});
+export const productVariantFormSchema = z
+  .object({
+    name: z.string().min(1, "Ten variant khong duoc de trong"),
+    barcode: z.string().optional(),
+    imageUrl: z.string().url("Image URL khong hop le").optional().or(z.literal("")),
+    price: z.coerce.number().positive("Gia ban phai lon hon 0"),
+    salePrice: z.coerce.number().min(0, "Gia khuyen mai khong duoc am").optional(),
+    weight: z.coerce.number().min(0, "Khoi luong khong duoc am").optional(),
+    unit: z.string().optional(),
+    status: productVariantStatusSchema.default("ACTIVE"),
+  })
+  .refine((values) => !values.salePrice || values.salePrice <= values.price, {
+    message: "Gia khuyen mai khong duoc lon hon gia ban",
+    path: ["salePrice"],
+  });
 
 export const productImageFormSchema = z.object({
   imageUrl: z.string().url("Image URL khong hop le"),

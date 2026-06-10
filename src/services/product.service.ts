@@ -43,12 +43,6 @@ export const productService = {
     return normalizeBackendResponse<Product>(response.data);
   },
 
-  async getProductById(id: string) {
-    // Admin detail/edit screens need id lookup. Replace with the real admin detail endpoint if backend names it differently.
-    const response = await apiClient.get(`/admin/products/${id}`);
-    return normalizeBackendResponse<Product>(response.data);
-  },
-
   async createProduct(payload: ProductFormPayload) {
     const response = await apiClient.post("/admin/products", payload);
     return normalizeBackendResponse<Product>(response.data);

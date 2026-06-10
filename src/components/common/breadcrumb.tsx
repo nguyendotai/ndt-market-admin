@@ -13,6 +13,9 @@ type BreadcrumbProps = {
 
 const labelMap = new Map([
   ["admin", "Admin"],
+  ["create", "Tao moi"],
+  ["edit", "Chinh sua"],
+  ["article-categories", "Article categories"],
   ...adminMenu.map((item) => [item.module, item.title] as const),
 ]);
 
@@ -39,7 +42,7 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
       {segments.map((segment, index) => {
         const href = `/${segments.slice(0, index + 1).join("/")}`;
         const isLast = index === segments.length - 1;
-        const label = labelMap.get(segment) ?? segment;
+        const label = labelMap.get(segment) ?? formatSegmentLabel(segment);
 
         return (
           <div key={href} className="flex items-center gap-1">
@@ -58,3 +61,16 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
   );
 }
 
+function formatSegmentLabel(segment: string) {
+  const decodedSegment = decodeURIComponent(segment);
+
+  if (/^[a-f0-9]{24}$/i.test(decodedSegment)) {
+    return "Chi tiet";
+  }
+
+  return decodedSegment
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}

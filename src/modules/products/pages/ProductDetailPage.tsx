@@ -13,17 +13,17 @@ import type { Product } from "@/modules/products";
 import { productService } from "@/services/product.service";
 
 type ProductDetailPageProps = {
-  productId: string;
+  productSlug: string;
 };
 
-export function ProductDetailPage({ productId }: ProductDetailPageProps) {
+export function ProductDetailPage({ productSlug }: ProductDetailPageProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = window.setTimeout(async () => {
       try {
-        const response = await productService.getProductById(productId);
+        const response = await productService.getProductBySlug(productSlug);
         setProduct(response.data);
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -33,7 +33,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [productId]);
+  }, [productSlug]);
 
   if (loading) {
     return <div className="grid min-h-96 place-items-center"><Loader2 className="size-6 animate-spin text-primary" /></div>;
@@ -43,7 +43,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     return <div className="rounded-lg border p-8 text-center text-muted-foreground">Khong tim thay san pham.</div>;
   }
 
-  const productEntityId = getEntityId(product);
+  const productEditSlug = product.slug || productSlug;
 
   return (
     <div className="space-y-6">
@@ -54,7 +54,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         actions={
           <>
             <Button variant="outline"><Link className="inline-flex items-center gap-2" href="/admin/products"><ArrowLeft className="size-4" />Quay lai</Link></Button>
-            <Button><Link className="inline-flex items-center gap-2" href={`/admin/products/${productEntityId}/edit`}><Edit className="size-4" />Sua</Link></Button>
+            <Button><Link className="inline-flex items-center gap-2" href={`/admin/products/${productEditSlug}/edit`}><Edit className="size-4" />Sua</Link></Button>
           </>
         }
       />
@@ -87,7 +87,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             <CardDescription>SKU, status, origin, tags va noi dung.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <Info label="SKU" value={product.sku} />
+            <Info label="SKU" value={product.sku || "-"} />
             <Info label="Slug" value={product.slug} />
             <Info label="Status" value={product.status} />
             <Info label="Danh muc" value={getRefName(product.category)} />
@@ -108,15 +108,24 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         <CardHeader><CardTitle>Variants</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>Ten</TableHead><TableHead>Barcode</TableHead><TableHead>Gia</TableHead><TableHead>Sale</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Anh</TableHead><TableHead>Ten</TableHead><TableHead>Barcode</TableHead><TableHead>Gia</TableHead><TableHead>Sale</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
             <TableBody>
               {(product.variants ?? []).map((variant) => (
                 <TableRow key={getEntityId(variant)}>
+                  <TableCell>
+                    <div className="flex size-11 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                      {variant.imageUrl ? (
+                        <div aria-label={variant.name} className="h-full w-full bg-cover bg-center" role="img" style={{ backgroundImage: `url(${variant.imageUrl})` }} />
+                      ) : (
+                        <ImageIcon className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{variant.name}</TableCell>
                   <TableCell className="font-mono text-xs">{variant.barcode || "-"}</TableCell>
                   <TableCell>{formatCurrency(variant.price)}</TableCell>
                   <TableCell>{variant.salePrice ? formatCurrency(variant.salePrice) : "-"}</TableCell>
-                  <TableCell><StatusBadge label={variant.status} variant={variant.status === "ACTIVE" ? "success" : "neutral"} /></TableCell>
+                  <TableCell><StatusBadge label={variant.status} variant={getVariantStatusBadgeVariant(variant.status)} /></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -139,6 +148,12 @@ function getRefName(value: Product["category"] | Product["brand"]) {
 
 function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
+}
+
+function getVariantStatusBadgeVariant(status: NonNullable<Product["variants"]>[number]["status"]) {
+  if (status === "ACTIVE") return "success";
+  if (status === "OUT_OF_STOCK") return "warning";
+  return "neutral";
 }
 
 function formatCurrency(value: number) {

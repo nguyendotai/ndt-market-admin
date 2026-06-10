@@ -2,12 +2,11 @@ import { ProductDetailPage } from "@/modules/products/pages/ProductDetailPage";
 
 type AdminProductDetailPageProps = {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
 };
 
 export default async function AdminProductDetailPage({ params }: AdminProductDetailPageProps) {
-  const { id } = await params;
-  return <ProductDetailPage productId={id} />;
+  const { slug } = await params;
+  return <ProductDetailPage productSlug={slug} />;
 }
-

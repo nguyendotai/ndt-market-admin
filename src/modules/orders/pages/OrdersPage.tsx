@@ -1,11 +1,11 @@
 "use client";
 
-import { Eye, Loader2, PackageCheck, Search } from "lucide-react";
+import { Eye, PackageCheck, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { PageHeader, StatusBadge } from "@/components/common";
+import { PageHeader, Pagination, StatusBadge, TableSkeleton } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -156,9 +156,7 @@ export function OrdersPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="grid min-h-80 place-items-center">
-              <Loader2 className="size-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton columns={8} rows={7} />
           ) : (
             <Table className="min-w-[1080px]">
               <TableHeader>
@@ -214,15 +212,13 @@ export function OrdersPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Trang {page}{meta?.totalPages ? ` / ${meta.totalPages}` : ""}
-        </p>
-        <div className="flex gap-2">
-          <Button disabled={page === 1} variant="outline" onClick={() => setPage((value) => Math.max(value - 1, 1))}>Truoc</Button>
-          <Button disabled={!hasNextPage} variant="outline" onClick={() => setPage((value) => value + 1)}>Sau</Button>
-        </div>
-      </div>
+      <Pagination
+        hasNextPage={hasNextPage}
+        loading={loading}
+        page={page}
+        totalPages={totalPages || undefined}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

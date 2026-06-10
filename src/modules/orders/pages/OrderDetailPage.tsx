@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { PageHeader, StatusBadge } from "@/components/common";
+import { ConfirmDialog, PageHeader, StatusBadge } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,6 +33,7 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const [status, setStatus] = useState<OrderStatus>("PENDING");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmStatusOpen, setConfirmStatusOpen] = useState(false);
 
   async function loadOrder() {
     setLoading(true);
@@ -69,6 +70,7 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
       const response = await orderService.updateOrderStatus(getEntityId(order), status);
       setOrder(response.data);
       setStatus(response.data.status);
+      setConfirmStatusOpen(false);
       toast.success("Cap nhat trang thai don hang thanh cong");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -119,7 +121,7 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             >
               {ORDER_STATUSES.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <Button disabled={submitting || status === order.status} onClick={handleUpdateStatus}>
+            <Button disabled={submitting || status === order.status} onClick={() => setConfirmStatusOpen(true)}>
               {submitting ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               Luu trang thai
             </Button>
@@ -229,6 +231,17 @@ export function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        description={`Ban co chac muon cap nhat don "${order.orderCode}" tu ${order.status} sang ${status}?`}
+        open={confirmStatusOpen}
+        title="Cap nhat trang thai don hang"
+        confirmText="Cap nhat"
+        onConfirm={handleUpdateStatus}
+        onOpenChange={(open) => {
+          if (!open && !submitting) setConfirmStatusOpen(false);
+        }}
+      />
     </div>
   );
 }

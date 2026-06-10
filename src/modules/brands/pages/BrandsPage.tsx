@@ -23,6 +23,7 @@ export function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [deletingBrand, setDeletingBrand] = useState<Brand | null>(null);
+  const [togglingBrand, setTogglingBrand] = useState<Brand | null>(null);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -109,12 +110,15 @@ export function BrandsPage() {
     }
   }
 
-  async function handleToggleActive(brand: Brand) {
+  async function handleToggleActive() {
+    if (!togglingBrand) return;
+
     try {
-      await brandService.updateBrand(brand.id, {
-        isActive: !brand.isActive,
+      await brandService.updateBrand(togglingBrand.id, {
+        isActive: !togglingBrand.isActive,
       });
-      toast.success(brand.isActive ? "Da tat thuong hieu" : "Da bat thuong hieu");
+      toast.success(togglingBrand.isActive ? "Da tat thuong hieu" : "Da bat thuong hieu");
+      setTogglingBrand(null);
       await loadBrands();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -207,7 +211,7 @@ export function BrandsPage() {
                         <p className="line-clamp-2">{brand.description || "Chua co mo ta"}</p>
                       </TableCell>
                       <TableCell>
-                        <button type="button" onClick={() => handleToggleActive(brand)}>
+                        <button type="button" onClick={() => setTogglingBrand(brand)}>
                           <StatusBadge
                             label={brand.isActive ? "Active" : "Inactive"}
                             variant={brand.isActive ? "success" : "neutral"}
@@ -270,6 +274,17 @@ export function BrandsPage() {
           }
         }}
       />
+
+      <ConfirmDialog
+        description={`Ban co chac muon ${togglingBrand?.isActive ? "tat" : "bat"} thuong hieu "${togglingBrand?.name ?? ""}"?`}
+        open={Boolean(togglingBrand)}
+        title="Cap nhat trang thai thuong hieu"
+        confirmText="Xac nhan"
+        onConfirm={handleToggleActive}
+        onOpenChange={(open) => {
+          if (!open) setTogglingBrand(null);
+        }}
+      />
     </div>
   );
 }
@@ -281,4 +296,3 @@ function getErrorMessage(error: unknown) {
 
   return "Da co loi xay ra";
 }
-

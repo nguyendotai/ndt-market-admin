@@ -1,11 +1,11 @@
 "use client";
 
-import { Edit, Eye, ImageIcon, Loader2, Package, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Eye, ImageIcon, Package, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { ConfirmDialog, PageHeader, StatusBadge } from "@/components/common";
+import { ConfirmDialog, PageHeader, Pagination, StatusBadge, TableSkeleton } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -198,9 +198,7 @@ export function ProductsPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="grid min-h-80 place-items-center">
-              <Loader2 className="size-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton columns={7} rows={7} />
           ) : (
             <Table className="min-w-[1080px]">
               <TableHeader>
@@ -222,6 +220,7 @@ export function ProductsPage() {
                 ) : (
                   visibleProducts.map((product) => {
                     const productId = getEntityId(product);
+                    const productSlug = product.slug || productId;
 
                     return (
                     <TableRow key={productId}>
@@ -234,7 +233,7 @@ export function ProductsPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="w-[130px] font-mono text-xs">{product.sku}</TableCell>
+                      <TableCell className="w-[130px] font-mono text-xs">{product.sku || "-"}</TableCell>
                       <TableCell className="w-[210px]">{getRefName(product.category)}</TableCell>
                       <TableCell className="w-[160px]">{getRefName(product.brand)}</TableCell>
                       <TableCell className="w-[170px] whitespace-nowrap text-sm text-muted-foreground">
@@ -244,12 +243,12 @@ export function ProductsPage() {
                       <TableCell className="w-[150px]">
                         <div className="flex justify-end gap-2">
                           <Button size="icon" variant="outline">
-                            <Link aria-label="Xem san pham" href={`/admin/products/${productId}`}>
+                            <Link aria-label="Xem san pham" href={`/admin/products/${productSlug}`}>
                               <Eye className="size-4" />
                             </Link>
                           </Button>
                           <Button size="icon" variant="outline">
-                            <Link aria-label="Sua san pham" href={`/admin/products/${productId}/edit`}>
+                            <Link aria-label="Sua san pham" href={`/admin/products/${productSlug}/edit`}>
                               <Edit className="size-4" />
                             </Link>
                           </Button>
@@ -268,13 +267,12 @@ export function ProductsPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Trang {page}</p>
-        <div className="flex gap-2">
-          <Button disabled={page === 1} variant="outline" onClick={() => setPage((value) => Math.max(value - 1, 1))}>Truoc</Button>
-          <Button disabled={products.length < limit} variant="outline" onClick={() => setPage((value) => value + 1)}>Sau</Button>
-        </div>
-      </div>
+      <Pagination
+        hasNextPage={products.length >= limit}
+        loading={loading}
+        page={page}
+        onPageChange={setPage}
+      />
 
       <ConfirmDialog
         description={`Ban co chac muon xoa san pham "${deletingProduct?.name ?? ""}"?`}

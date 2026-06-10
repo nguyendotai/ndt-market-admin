@@ -1,6 +1,5 @@
 export type Category = {
-  _id?: string;
-  id: string;
+  _id: string;
   name: string;
   parent?: string | Category | null;
   parentId?: string | null;
