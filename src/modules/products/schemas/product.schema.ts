@@ -1,10 +1,14 @@
 import { z } from "zod";
 
-export const productStatusSchema = z.enum(["active", "inactive", "draft"]);
-export const productVariantStatusSchema = z.enum(["active", "inactive"]);
+export const productStatusSchema = z.enum(["DRAFT", "ACTIVE", "INACTIVE", "OUT_OF_STOCK"]);
+export const productVariantStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
 
 export const productFormSchema = z.object({
   name: z.string().min(2, "Ten san pham phai co it nhat 2 ky tu"),
+  slug: z
+    .string()
+    .min(2, "Slug phai co it nhat 2 ky tu")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chi gom chu thuong, so va dau gach ngang"),
   sku: z.string().min(2, "SKU khong duoc de trong"),
   category: z.string().min(1, "Vui long chon danh muc"),
   brand: z.string().min(1, "Vui long chon thuong hieu"),
@@ -15,7 +19,7 @@ export const productFormSchema = z.object({
   ingredients: z.string().optional(),
   storageInstruction: z.string().optional(),
   tags: z.string().optional(),
-  status: productStatusSchema.default("draft"),
+  status: productStatusSchema.default("DRAFT"),
 });
 
 export const productVariantFormSchema = z.object({
@@ -25,7 +29,7 @@ export const productVariantFormSchema = z.object({
   salePrice: z.coerce.number().min(0, "Gia khuyen mai khong duoc am").optional(),
   weight: z.coerce.number().min(0, "Khoi luong khong duoc am").optional(),
   unit: z.string().optional(),
-  status: productVariantStatusSchema.default("active"),
+  status: productVariantStatusSchema.default("ACTIVE"),
 });
 
 export const productImageFormSchema = z.object({

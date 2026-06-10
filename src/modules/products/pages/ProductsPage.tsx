@@ -29,6 +29,10 @@ export function ProductsPage() {
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortValue>("newest");
+  const [origin, setOrigin] = useState("");
+  const [tags, setTags] = useState("");
+  const [rating, setRating] = useState("");
+  const [inStock, setInStock] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const limit = 10;
@@ -42,6 +46,10 @@ export function ProductsPage() {
           keyword: keyword || undefined,
           category: category === "all" ? undefined : category,
           brand: brand === "all" ? undefined : brand,
+          origin: origin || undefined,
+          tags: tags || undefined,
+          rating: rating ? Number(rating) : undefined,
+          inStock: inStock || undefined,
           status,
           sort,
           page,
@@ -69,7 +77,7 @@ export function ProductsPage() {
     return () => window.clearTimeout(timer);
     // loadData intentionally reads the current filter state from this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, category, brand, status, sort, page]);
+  }, [keyword, category, brand, status, sort, origin, tags, rating, inStock, page]);
 
   const visibleProducts = useMemo(() => products, [products]);
 
@@ -79,7 +87,7 @@ export function ProductsPage() {
     }
 
     try {
-      await productService.deleteProduct(deletingProduct.id);
+      await productService.deleteProduct(getEntityId(deletingProduct));
       toast.success("Da xoa san pham");
       setDeletingProduct(null);
       await loadData();
@@ -104,35 +112,87 @@ export function ProductsPage() {
         }
       />
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="gap-4 border-b">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <CardTitle>Danh sach san pham</CardTitle>
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-[260px_180px_180px_150px_170px]">
-              <div className="flex h-9 items-center gap-2 rounded-lg border bg-background px-3 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-4">
+            <CardTitle className="whitespace-nowrap">Danh sach san pham</CardTitle>
+            <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-[minmax(220px,1.4fr)_minmax(160px,1fr)_minmax(150px,1fr)_minmax(140px,0.9fr)_minmax(150px,0.9fr)_minmax(140px,0.85fr)_minmax(180px,1fr)_minmax(100px,0.65fr)_minmax(100px,0.7fr)]">
+              <div className="flex h-9 min-w-0 items-center gap-2 rounded-lg border bg-background px-3 text-sm text-muted-foreground sm:col-span-2 lg:col-span-2 2xl:col-span-1">
                 <Search className="size-4" />
                 <input className="w-full bg-transparent outline-none" placeholder="Search keyword" value={keyword} onChange={(event) => { setKeyword(event.target.value); setPage(1); }} />
               </div>
               <Select value={category} onChange={(value) => { setCategory(value); setPage(1); }}>
                 <option value="all">Tat ca danh muc</option>
-                {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                {categories.map((item) => {
+                  const itemId = getEntityId(item);
+                  if (!itemId) return null;
+                  return <option key={itemId} value={itemId}>{item.name}</option>;
+                })}
               </Select>
               <Select value={brand} onChange={(value) => { setBrand(value); setPage(1); }}>
                 <option value="all">Tat ca brand</option>
-                {brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                {brands.map((item) => {
+                  const itemId = getEntityId(item);
+                  if (!itemId) return null;
+                  return <option key={itemId} value={itemId}>{item.name}</option>;
+                })}
               </Select>
               <Select value={status} onChange={(value) => { setStatus(value as StatusFilter); setPage(1); }}>
                 <option value="all">Tat ca status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="draft">Draft</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="OUT_OF_STOCK">Out of stock</option>
               </Select>
               <Select value={sort} onChange={(value) => setSort(value as SortValue)}>
                 <option value="newest">Moi nhat</option>
                 <option value="price_asc">Gia tang dan</option>
                 <option value="price_desc">Gia giam dan</option>
-                <option value="best_seller">Ban chay</option>
+                <option value="best_selling">Ban chay</option>
+                <option value="rating">Danh gia cao</option>
               </Select>
+              <input
+                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
+                placeholder="Origin"
+                value={origin}
+                onChange={(event) => {
+                  setOrigin(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <input
+                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
+                placeholder="Tags"
+                value={tags}
+                onChange={(event) => {
+                  setTags(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <input
+                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
+                min={0}
+                max={5}
+                placeholder="Rating"
+                type="number"
+                value={rating}
+                onChange={(event) => {
+                  setRating(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <label className="flex h-9 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium">
+                <input
+                  checked={inStock}
+                  className="size-4 accent-primary"
+                  type="checkbox"
+                  onChange={(event) => {
+                    setInStock(event.target.checked);
+                    setPage(1);
+                  }}
+                />
+                <span className="whitespace-nowrap">Con hang</span>
+              </label>
             </div>
           </div>
         </CardHeader>
@@ -142,13 +202,14 @@ export function ProductsPage() {
               <Loader2 className="size-6 animate-spin text-primary" />
             </div>
           ) : (
-            <Table>
+            <Table className="min-w-[1080px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>San pham</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Danh muc</TableHead>
                   <TableHead>Brand</TableHead>
+                  <TableHead>Ban/Danh gia</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Thao tac</TableHead>
                 </TableRow>
@@ -156,33 +217,39 @@ export function ProductsPage() {
               <TableBody>
                 {visibleProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell className="py-12 text-center text-muted-foreground" colSpan={6}>Khong tim thay san pham phu hop.</TableCell>
+                    <TableCell className="py-12 text-center text-muted-foreground" colSpan={7}>Khong tim thay san pham phu hop.</TableCell>
                   </TableRow>
                 ) : (
-                  visibleProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
+                  visibleProducts.map((product) => {
+                    const productId = getEntityId(product);
+
+                    return (
+                    <TableRow key={productId}>
+                      <TableCell className="w-[300px]">
                         <div className="flex items-center gap-3">
                           <ProductThumb product={product} />
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{product.shortDescription || "Chua co mo ta ngan"}</p>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{product.name}</p>
+                            <p className="mt-1 font-mono text-xs text-muted-foreground">{product.slug}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-                      <TableCell>{getRefName(product.category)}</TableCell>
-                      <TableCell>{getRefName(product.brand)}</TableCell>
-                      <TableCell><StatusBadge label={product.status} variant={product.status === "active" ? "success" : product.status === "draft" ? "warning" : "neutral"} /></TableCell>
-                      <TableCell>
+                      <TableCell className="w-[130px] font-mono text-xs">{product.sku}</TableCell>
+                      <TableCell className="w-[210px]">{getRefName(product.category)}</TableCell>
+                      <TableCell className="w-[160px]">{getRefName(product.brand)}</TableCell>
+                      <TableCell className="w-[170px] whitespace-nowrap text-sm text-muted-foreground">
+                        {product.soldCount ?? 0} da ban / {product.ratingAverage ?? 0} ({product.ratingCount ?? 0})
+                      </TableCell>
+                      <TableCell className="w-[130px]"><StatusBadge label={product.status} variant={product.status === "ACTIVE" ? "success" : product.status === "DRAFT" ? "warning" : "neutral"} /></TableCell>
+                      <TableCell className="w-[150px]">
                         <div className="flex justify-end gap-2">
                           <Button size="icon" variant="outline">
-                            <Link aria-label="Xem san pham" href={`/admin/products/${product.id}`}>
+                            <Link aria-label="Xem san pham" href={`/admin/products/${productId}`}>
                               <Eye className="size-4" />
                             </Link>
                           </Button>
                           <Button size="icon" variant="outline">
-                            <Link aria-label="Sua san pham" href={`/admin/products/${product.id}/edit`}>
+                            <Link aria-label="Sua san pham" href={`/admin/products/${productId}/edit`}>
                               <Edit className="size-4" />
                             </Link>
                           </Button>
@@ -192,7 +259,8 @@ export function ProductsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -252,6 +320,10 @@ function getRefName(value: Product["category"] | Product["brand"]) {
   if (!value) return "-";
   if (typeof value === "string") return value;
   return value.name;
+}
+
+function getEntityId(value: { id?: string; _id?: string }) {
+  return value.id ?? value._id ?? "";
 }
 
 function getErrorMessage(error: unknown) {

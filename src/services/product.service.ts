@@ -14,20 +14,38 @@ export type ProductListParams = {
   keyword?: string;
   category?: string;
   brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  origin?: string;
+  tags?: string;
+  rating?: number;
+  inStock?: boolean;
+  storeId?: string;
   status?: ProductStatus | "all";
-  sort?: "price_asc" | "price_desc" | "newest" | "best_seller";
+  sort?: "price_asc" | "price_desc" | "newest" | "best_selling" | "rating";
   page?: number;
   limit?: number;
 };
 
 export const productService = {
   async listProducts(params?: ProductListParams) {
-    const response = await apiClient.get("/products", { params });
+    const response = await apiClient.get("/products", {
+      params: {
+        ...params,
+        status: params?.status === "all" ? undefined : params?.status,
+      },
+    });
     return normalizeBackendResponse<Product[]>(response.data);
   },
 
+  async getProductBySlug(slug: string) {
+    const response = await apiClient.get(`/products/${slug}`);
+    return normalizeBackendResponse<Product>(response.data);
+  },
+
   async getProductById(id: string) {
-    const response = await apiClient.get(`/products/${id}`);
+    // Admin detail/edit screens need id lookup. Replace with the real admin detail endpoint if backend names it differently.
+    const response = await apiClient.get(`/admin/products/${id}`);
     return normalizeBackendResponse<Product>(response.data);
   },
 

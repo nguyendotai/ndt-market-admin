@@ -1,13 +1,15 @@
-export type ProductStatus = "active" | "inactive" | "draft";
-export type ProductVariantStatus = "active" | "inactive";
+export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK";
+export type ProductVariantStatus = "ACTIVE" | "INACTIVE";
 
 export type ProductCategoryRef = {
+  _id?: string;
   id: string;
   name: string;
   slug?: string;
 };
 
 export type ProductBrandRef = {
+  _id?: string;
   id: string;
   name: string;
   slug?: string;
@@ -15,6 +17,7 @@ export type ProductBrandRef = {
 };
 
 export type ProductVariant = {
+  _id?: string;
   id: string;
   name: string;
   barcode?: string | null;
@@ -26,6 +29,7 @@ export type ProductVariant = {
 };
 
 export type ProductImage = {
+  _id?: string;
   id: string;
   imageUrl: string;
   isThumbnail: boolean;
@@ -33,8 +37,10 @@ export type ProductImage = {
 };
 
 export type Product = {
+  _id?: string;
   id: string;
   name: string;
+  slug: string;
   sku: string;
   category?: ProductCategoryRef | string | null;
   brand?: ProductBrandRef | string | null;
@@ -49,11 +55,14 @@ export type Product = {
   variants?: ProductVariant[];
   images?: ProductImage[];
   soldCount?: number;
+  ratingAverage?: number;
+  ratingCount?: number;
   createdAt?: string;
 };
 
 export type ProductFormPayload = {
   name: string;
+  slug: string;
   sku: string;
   category: string;
   brand: string;

@@ -28,7 +28,7 @@ const defaultValues: ProductVariantFormInput = {
   salePrice: 0,
   weight: 0,
   unit: "",
-  status: "active",
+  status: "ACTIVE",
 };
 
 export function ProductVariantModal({
@@ -109,8 +109,8 @@ export function ProductVariantModal({
 
           <Field error={errors.status?.message} label="Trang thai">
             <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("status")}>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </Field>
 
@@ -136,4 +136,3 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     </label>
   );
 }
-

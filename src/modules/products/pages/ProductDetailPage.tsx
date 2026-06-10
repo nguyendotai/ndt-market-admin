@@ -43,6 +43,8 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     return <div className="rounded-lg border p-8 text-center text-muted-foreground">Khong tim thay san pham.</div>;
   }
 
+  const productEntityId = getEntityId(product);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -52,7 +54,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
         actions={
           <>
             <Button variant="outline"><Link className="inline-flex items-center gap-2" href="/admin/products"><ArrowLeft className="size-4" />Quay lai</Link></Button>
-            <Button><Link className="inline-flex items-center gap-2" href={`/admin/products/${product.id}/edit`}><Edit className="size-4" />Sua</Link></Button>
+            <Button><Link className="inline-flex items-center gap-2" href={`/admin/products/${productEntityId}/edit`}><Edit className="size-4" />Sua</Link></Button>
           </>
         }
       />
@@ -68,7 +70,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               <div className="grid h-64 place-items-center rounded-lg border bg-muted"><ImageIcon className="size-8 text-muted-foreground" /></div>
             ) : (
               product.images?.map((image) => (
-                <div key={image.id} className="overflow-hidden rounded-lg border">
+                <div key={getEntityId(image)} className="overflow-hidden rounded-lg border">
                   <div className="h-52 bg-cover bg-center" style={{ backgroundImage: `url(${image.imageUrl})` }} />
                   <div className="p-3">
                     <StatusBadge label={image.isThumbnail ? "Thumbnail" : `Sort ${image.sortOrder}`} variant={image.isThumbnail ? "success" : "neutral"} />
@@ -86,12 +88,15 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           </CardHeader>
           <CardContent className="grid gap-4">
             <Info label="SKU" value={product.sku} />
+            <Info label="Slug" value={product.slug} />
             <Info label="Status" value={product.status} />
             <Info label="Danh muc" value={getRefName(product.category)} />
             <Info label="Thuong hieu" value={getRefName(product.brand)} />
             <Info label="Don vi" value={product.unit ?? "-"} />
             <Info label="Xuat xu" value={product.origin ?? "-"} />
             <Info label="Tags" value={(product.tags ?? []).join(", ") || "-"} />
+            <Info label="Da ban" value={String(product.soldCount ?? 0)} />
+            <Info label="Danh gia" value={`${product.ratingAverage ?? 0} (${product.ratingCount ?? 0} luot)`} />
             <Info label="Mo ta" value={product.description ?? "-"} />
             <Info label="Thanh phan" value={product.ingredients ?? "-"} />
             <Info label="Bao quan" value={product.storageInstruction ?? "-"} />
@@ -106,12 +111,12 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
             <TableHeader><TableRow><TableHead>Ten</TableHead><TableHead>Barcode</TableHead><TableHead>Gia</TableHead><TableHead>Sale</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
             <TableBody>
               {(product.variants ?? []).map((variant) => (
-                <TableRow key={variant.id}>
+                <TableRow key={getEntityId(variant)}>
                   <TableCell>{variant.name}</TableCell>
                   <TableCell className="font-mono text-xs">{variant.barcode || "-"}</TableCell>
                   <TableCell>{formatCurrency(variant.price)}</TableCell>
                   <TableCell>{variant.salePrice ? formatCurrency(variant.salePrice) : "-"}</TableCell>
-                  <TableCell><StatusBadge label={variant.status} variant={variant.status === "active" ? "success" : "neutral"} /></TableCell>
+                  <TableCell><StatusBadge label={variant.status} variant={variant.status === "ACTIVE" ? "success" : "neutral"} /></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -132,6 +137,10 @@ function getRefName(value: Product["category"] | Product["brand"]) {
   return value.name;
 }
 
+function getEntityId(value: { id?: string; _id?: string }) {
+  return value.id ?? value._id ?? "";
+}
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN", { currency: "VND", maximumFractionDigits: 0, style: "currency" }).format(value);
 }
@@ -140,4 +149,3 @@ function getErrorMessage(error: unknown) {
   if (error && typeof error === "object" && "message" in error) return String(error.message);
   return "Da co loi xay ra";
 }
-

@@ -5,7 +5,7 @@ import { ArrowLeft, ImageIcon, Loader2, Package, Plus, Save, Trash2 } from "luci
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { ConfirmDialog, PageHeader, StatusBadge } from "@/components/common";
@@ -37,6 +37,7 @@ type ProductFormPageProps = {
 
 const defaultValues: ProductFormInput = {
   name: "",
+  slug: "",
   sku: "",
   category: "",
   brand: "",
@@ -47,7 +48,7 @@ const defaultValues: ProductFormInput = {
   ingredients: "",
   storageInstruction: "",
   tags: "",
-  status: "draft",
+  status: "DRAFT",
 };
 
 export function ProductFormPage({ productId }: ProductFormPageProps) {
@@ -72,10 +73,19 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     handleSubmit,
     register,
     reset,
+    setValue,
+    control,
   } = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues,
   });
+  const productName = useWatch({ control, name: "name" });
+
+  useEffect(() => {
+    if (!isEdit && productName) {
+      setValue("slug", generateSlug(productName), { shouldValidate: true });
+    }
+  }, [isEdit, productName, setValue]);
 
   async function loadOptions() {
     try {
@@ -100,6 +110,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       setImages(item.images ?? []);
       reset({
         name: item.name,
+        slug: item.slug,
         sku: item.sku,
         category: getRefId(item.category),
         brand: getRefId(item.brand),
@@ -137,15 +148,16 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
     const payload: ProductFormPayload = {
       name: values.name,
+      slug: values.slug,
       sku: values.sku,
       category: values.category,
       brand: values.brand,
-      description: values.description || null,
-      shortDescription: values.shortDescription || null,
-      unit: values.unit || null,
-      origin: values.origin || null,
-      ingredients: values.ingredients || null,
-      storageInstruction: values.storageInstruction || null,
+      description: emptyToUndefined(values.description),
+      shortDescription: emptyToUndefined(values.shortDescription),
+      unit: values.unit,
+      origin: emptyToUndefined(values.origin),
+      ingredients: emptyToUndefined(values.ingredients),
+      storageInstruction: emptyToUndefined(values.storageInstruction),
       tags: splitTags(values.tags),
       status: values.status,
     };
@@ -159,7 +171,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
       } else {
         const response = await productService.createProduct(payload);
         toast.success("Tao san pham thanh cong");
-        router.replace(`/admin/products/${response.data.id}/edit`);
+        router.replace(`/admin/products/${getEntityId(response.data)}/edit`);
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -178,7 +190,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
 
     try {
       if (editingVariant) {
-        await productService.updateVariant(editingVariant.id, normalizeVariant(values));
+        await productService.updateVariant(getEntityId(editingVariant), normalizeVariant(values));
         toast.success("Cap nhat variant thanh cong");
       } else {
         await productService.createVariant(productId, normalizeVariant(values));
@@ -221,7 +233,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     }
 
     try {
-      await productService.deleteVariant(deletingVariant.id);
+      await productService.deleteVariant(getEntityId(deletingVariant));
       toast.success("Da xoa variant");
       setDeletingVariant(null);
       await loadProduct(productId);
@@ -236,7 +248,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
     }
 
     try {
-      await productService.deleteImage(deletingImage.id);
+      await productService.deleteImage(getEntityId(deletingImage));
       toast.success("Da xoa anh san pham");
       setDeletingImage(null);
       await loadProduct(productId);
@@ -279,23 +291,30 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
             <Field error={errors.name?.message} label="Ten san pham">
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("name")} />
             </Field>
+            <Field error={errors.slug?.message} label="Slug">
+              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("slug")} />
+            </Field>
             <Field error={errors.sku?.message} label="SKU">
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("sku")} />
             </Field>
             <Field error={errors.category?.message} label="Danh muc">
               <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("category")}>
                 <option value="">Chon danh muc</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
+                {categories.map((category) => {
+                  const categoryId = getEntityId(category);
+                  if (!categoryId) return null;
+                  return <option key={categoryId} value={categoryId}>{category.name}</option>;
+                })}
               </select>
             </Field>
             <Field error={errors.brand?.message} label="Thuong hieu">
               <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("brand")}>
                 <option value="">Chon thuong hieu</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>{brand.name}</option>
-                ))}
+                {brands.map((brand) => {
+                  const brandId = getEntityId(brand);
+                  if (!brandId) return null;
+                  return <option key={brandId} value={brandId}>{brand.name}</option>;
+                })}
               </select>
             </Field>
             <Field error={errors.unit?.message} label="Don vi">
@@ -303,9 +322,10 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
             </Field>
             <Field error={errors.status?.message} label="Trang thai">
               <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("status")}>
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="OUT_OF_STOCK">Out of stock</option>
               </select>
             </Field>
           </CardContent>
@@ -378,13 +398,13 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
               </TableHeader>
               <TableBody>
                 {variants.map((variant) => (
-                  <TableRow key={variant.id}>
+                  <TableRow key={getEntityId(variant)}>
                     <TableCell className="font-medium">{variant.name}</TableCell>
                     <TableCell className="font-mono text-xs">{variant.barcode || "-"}</TableCell>
                     <TableCell>{formatCurrency(variant.price)}</TableCell>
                     <TableCell>{variant.salePrice ? formatCurrency(variant.salePrice) : "-"}</TableCell>
                     <TableCell>
-                      <StatusBadge label={variant.status} variant={variant.status === "active" ? "success" : "neutral"} />
+                      <StatusBadge label={variant.status} variant={variant.status === "ACTIVE" ? "success" : "neutral"} />
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -423,7 +443,7 @@ export function ProductFormPage({ productId }: ProductFormPageProps) {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {images.map((image) => (
-                <div key={image.id} className="overflow-hidden rounded-lg border bg-background">
+                <div key={getEntityId(image)} className="overflow-hidden rounded-lg border bg-background">
                   <div className="flex h-40 items-center justify-center bg-muted">
                     {image.imageUrl ? (
                       <div aria-label="Product image" className="h-full w-full bg-cover bg-center" role="img" style={{ backgroundImage: `url(${image.imageUrl})` }} />
@@ -505,7 +525,16 @@ function flattenCategories(categories: Category[]): Category[] {
 function getRefId(value: Product["category"] | Product["brand"]) {
   if (!value) return "";
   if (typeof value === "string") return value;
-  return value.id;
+  return getEntityId(value);
+}
+
+function getEntityId(value: { id?: string; _id?: string }) {
+  return value.id ?? value._id ?? "";
+}
+
+function emptyToUndefined(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function splitTags(value?: string) {
@@ -518,13 +547,27 @@ function splitTags(value?: string) {
 function normalizeVariant(values: ProductVariantFormValues) {
   return {
     name: values.name,
-    barcode: values.barcode || null,
+    barcode: emptyToUndefined(values.barcode),
     price: values.price,
-    salePrice: values.salePrice || null,
-    weight: values.weight || null,
-    unit: values.unit || null,
+    salePrice: values.salePrice || undefined,
+    weight: values.weight || undefined,
+    unit: emptyToUndefined(values.unit),
     status: values.status,
   };
+}
+
+function generateSlug(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "d")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function formatCurrency(value: number) {
