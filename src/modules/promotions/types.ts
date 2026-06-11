@@ -1,4 +1,4 @@
-export type DiscountType = "PERCENTAGE" | "FIXED";
+export type DiscountType = "PERCENT" | "FIXED";
 export type PromotionStatus = "ACTIVE" | "INACTIVE";
 
 export type PromotionProductRef = {

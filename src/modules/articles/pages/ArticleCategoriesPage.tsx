@@ -21,7 +21,6 @@ import { articleService } from "@/services/article.service";
 const defaultValues: ArticleCategoryInput = {
   name: "",
   slug: "",
-  description: "",
 };
 
 export function ArticleCategoriesPage() {
@@ -77,7 +76,6 @@ export function ArticleCategoriesPage() {
       await articleService.createArticleCategory({
         name: values.name,
         slug: values.slug,
-        description: emptyToUndefined(values.description),
       });
       toast.success("Tao category bai viet thanh cong");
       reset(defaultValues);
@@ -92,7 +90,7 @@ export function ArticleCategoriesPage() {
   const visibleCategories = categories.filter((category) => {
     const normalizedKeyword = keyword.trim().toLowerCase();
     if (!normalizedKeyword) return true;
-    return [category.name, category.slug, category.description].join(" ").toLowerCase().includes(normalizedKeyword);
+    return [category.name, category.slug].join(" ").toLowerCase().includes(normalizedKeyword);
   });
 
   return (
@@ -115,9 +113,6 @@ export function ArticleCategoriesPage() {
               </Field>
               <Field error={errors.slug?.message} label="Slug">
                 <input className="h-10 rounded-lg border bg-background px-3 font-mono text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("slug")} />
-              </Field>
-              <Field error={errors.description?.message} label="Description">
-                <textarea className="min-h-24 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("description")} />
               </Field>
               <Button disabled={submitting} type="submit">
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
@@ -148,13 +143,12 @@ export function ArticleCategoriesPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Slug</TableHead>
-                    <TableHead>Description</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {visibleCategories.length === 0 ? (
                     <TableRow>
-                      <TableCell className="py-12 text-center text-muted-foreground" colSpan={3}>
+                      <TableCell className="py-12 text-center text-muted-foreground" colSpan={2}>
                         Chua co category bai viet.
                       </TableCell>
                     </TableRow>
@@ -163,7 +157,6 @@ export function ArticleCategoriesPage() {
                       <TableRow key={getEntityId(category)}>
                         <TableCell className="font-medium">{category.name}</TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground">{category.slug}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{category.description || "-"}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -189,11 +182,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
-}
-
-function emptyToUndefined(value?: string | null) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
 }
 
 function generateSlug(value: string) {

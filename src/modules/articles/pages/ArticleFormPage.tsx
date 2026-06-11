@@ -22,7 +22,7 @@ import { articleService } from "@/services/article.service";
 import { uploadService } from "@/services/upload.service";
 
 type ArticleFormPageProps = {
-  articleId?: string;
+  articleSlug?: string;
 };
 
 const defaultValues: ArticleFormInput = {
@@ -36,11 +36,12 @@ const defaultValues: ArticleFormInput = {
   publishedAt: "",
 };
 
-export function ArticleFormPage({ articleId }: ArticleFormPageProps) {
-  const isEdit = Boolean(articleId);
+export function ArticleFormPage({ articleSlug }: ArticleFormPageProps) {
+  const isEdit = Boolean(articleSlug);
   const router = useRouter();
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
-  const [loading, setLoading] = useState(Boolean(articleId));
+  const [loading, setLoading] = useState(Boolean(articleSlug));
+  const [editingArticleId, setEditingArticleId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -78,12 +79,13 @@ export function ArticleFormPage({ articleId }: ArticleFormPageProps) {
     }
   }
 
-  async function loadArticle(id: string) {
+  async function loadArticle(slug: string) {
     setLoading(true);
 
     try {
-      const response = await articleService.getArticleById(id);
+      const response = await articleService.getArticleBySlug(slug);
       const article = response.data;
+      setEditingArticleId(getEntityId(article));
       reset({
         title: article.title,
         slug: article.slug,
@@ -104,15 +106,15 @@ export function ArticleFormPage({ articleId }: ArticleFormPageProps) {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       loadCategories();
-      if (articleId) {
-        loadArticle(articleId);
+      if (articleSlug) {
+        loadArticle(articleSlug);
       }
     }, 0);
 
     return () => window.clearTimeout(timer);
-    // load functions intentionally read current articleId.
+    // load functions intentionally read current articleSlug.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [articleId]);
+  }, [articleSlug]);
 
   const selectedCategoryName = useMemo(() => {
     const selected = categories.find((item) => getEntityId(item) === category);
@@ -150,8 +152,12 @@ export function ArticleFormPage({ articleId }: ArticleFormPageProps) {
     };
 
     try {
-      if (articleId) {
-        await articleService.updateArticle(articleId, payload);
+      if (isEdit) {
+        if (!editingArticleId) {
+          throw new Error("Khong tim thay ID bai viet de cap nhat");
+        }
+
+        await articleService.updateArticle(editingArticleId, payload);
         toast.success("Cap nhat bai viet thanh cong");
       } else {
         await articleService.createArticle(payload);

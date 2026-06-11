@@ -78,7 +78,7 @@ export function BrandsPage() {
 
     try {
       if (editingBrand) {
-        await brandService.updateBrand(editingBrand.id, payload);
+        await brandService.updateBrand(getBrandId(editingBrand), payload);
         toast.success("Cap nhat thuong hieu thanh cong");
       } else {
         await brandService.createBrand(payload);
@@ -101,7 +101,7 @@ export function BrandsPage() {
     }
 
     try {
-      await brandService.deleteBrand(deletingBrand.id);
+      await brandService.deleteBrand(getBrandId(deletingBrand));
       toast.success("Da xoa thuong hieu");
       setDeletingBrand(null);
       await loadBrands();
@@ -114,7 +114,7 @@ export function BrandsPage() {
     if (!togglingBrand) return;
 
     try {
-      await brandService.updateBrand(togglingBrand.id, {
+      await brandService.updateBrand(getBrandId(togglingBrand), {
         isActive: !togglingBrand.isActive,
       });
       toast.success(togglingBrand.isActive ? "Da tat thuong hieu" : "Da bat thuong hieu");
@@ -188,7 +188,7 @@ export function BrandsPage() {
                   </TableRow>
                 ) : (
                   visibleBrands.map((brand) => (
-                    <TableRow key={brand.id}>
+                    <TableRow key={getBrandId(brand)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="flex size-11 items-center justify-center overflow-hidden rounded-lg border bg-muted">
@@ -295,4 +295,14 @@ function getErrorMessage(error: unknown) {
   }
 
   return "Da co loi xay ra";
+}
+
+function getBrandId(brand: Brand) {
+  const id = brand.id ?? brand._id;
+
+  if (!id) {
+    throw new Error(`Thuong hieu "${brand.name}" thieu id/_id tu backend`);
+  }
+
+  return id;
 }

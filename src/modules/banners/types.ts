@@ -1,11 +1,9 @@
 export type BannerStatus = "ACTIVE" | "INACTIVE";
 export type BannerPosition =
-  | "HOME_HERO"
   | "HOME_TOP"
   | "HOME_MIDDLE"
-  | "HOME_BOTTOM"
-  | "CATEGORY_TOP"
-  | "PRODUCT_DETAIL"
+  | "CATEGORY"
+  | "POPUP"
   | string;
 
 export type Banner = {
@@ -18,13 +16,14 @@ export type Banner = {
   startDate: string;
   endDate: string;
   status: BannerStatus;
+  isActive?: boolean;
   sortOrder: number;
 };
 
 export type BannerFormPayload = {
   title: string;
   imageUrl: string;
-  linkUrl?: string;
+  linkUrl: string;
   position: BannerPosition;
   startDate: string;
   endDate: string;

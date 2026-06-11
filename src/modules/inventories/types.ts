@@ -1,6 +1,12 @@
 export type InventoryItem = {
   _id?: string;
-  id: string;
+  id?: string;
+  productName?: string;
+  productSku?: string;
+  variantName?: string;
+  barcode?: string | null;
+  storeName?: string;
+  stockStatus?: "LOW_STOCK" | "IN_STOCK" | string;
   product?: InventoryProductRef | string | null;
   productId?: string;
   variant?: InventoryVariantRef | string | null;
@@ -35,22 +41,38 @@ export type InventoryStoreRef = {
 
 export type StockMovement = {
   _id?: string;
-  id: string;
-  type: "IMPORT" | "ADJUST" | "RESERVE" | "RELEASE" | "SALE" | string;
+  id?: string;
+  productName?: string;
+  productSku?: string;
+  variantName?: string;
+  barcode?: string | null;
+  storeName?: string;
+  type: "IMPORT" | "EXPORT" | "ADJUST" | "RESERVE" | "RELEASE" | string;
   quantity: number;
+  reason?: string | null;
   note?: string | null;
+  createdBy?: {
+    _id?: string;
+    id?: string;
+    fullName?: string;
+    name?: string;
+  } | string | null;
   createdAt?: string;
   inventory?: string | InventoryItem | null;
+  store?: string | InventoryStoreRef | null;
+  variant?: string | InventoryVariantRef | null;
 };
 
 export type InventoryImportPayload = {
-  inventoryId: string;
+  store: string;
+  variant: string;
   quantity: number;
-  note?: string;
+  reason?: string;
 };
 
 export type InventoryAdjustPayload = {
-  inventoryId: string;
+  store: string;
+  variant: string;
   quantity: number;
-  note?: string;
+  reason?: string;
 };

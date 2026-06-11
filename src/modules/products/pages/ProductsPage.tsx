@@ -29,9 +29,6 @@ export function ProductsPage() {
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortValue>("newest");
-  const [origin, setOrigin] = useState("");
-  const [tags, setTags] = useState("");
-  const [rating, setRating] = useState("");
   const [inStock, setInStock] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -46,9 +43,6 @@ export function ProductsPage() {
           keyword: keyword || undefined,
           category: category === "all" ? undefined : category,
           brand: brand === "all" ? undefined : brand,
-          origin: origin || undefined,
-          tags: tags || undefined,
-          rating: rating ? Number(rating) : undefined,
           inStock: inStock || undefined,
           status,
           sort,
@@ -77,7 +71,7 @@ export function ProductsPage() {
     return () => window.clearTimeout(timer);
     // loadData intentionally reads the current filter state from this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, category, brand, status, sort, origin, tags, rating, inStock, page]);
+  }, [keyword, category, brand, status, sort, inStock, page]);
 
   const visibleProducts = useMemo(() => products, [products]);
 
@@ -151,36 +145,6 @@ export function ProductsPage() {
                 <option value="best_selling">Ban chay</option>
                 <option value="rating">Danh gia cao</option>
               </Select>
-              <input
-                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
-                placeholder="Origin"
-                value={origin}
-                onChange={(event) => {
-                  setOrigin(event.target.value);
-                  setPage(1);
-                }}
-              />
-              <input
-                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
-                placeholder="Tags"
-                value={tags}
-                onChange={(event) => {
-                  setTags(event.target.value);
-                  setPage(1);
-                }}
-              />
-              <input
-                className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30"
-                min={0}
-                max={5}
-                placeholder="Rating"
-                type="number"
-                value={rating}
-                onChange={(event) => {
-                  setRating(event.target.value);
-                  setPage(1);
-                }}
-              />
               <label className="flex h-9 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium">
                 <input
                   checked={inStock}

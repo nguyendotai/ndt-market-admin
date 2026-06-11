@@ -17,12 +17,10 @@ type PositionFilter = BannerPosition | "all";
 
 const POSITION_OPTIONS = [
   "all",
-  "HOME_HERO",
   "HOME_TOP",
   "HOME_MIDDLE",
-  "HOME_BOTTOM",
-  "CATEGORY_TOP",
-  "PRODUCT_DETAIL",
+  "CATEGORY",
+  "POPUP",
 ] as const;
 
 export function BannersPage() {
@@ -70,7 +68,7 @@ export function BannersPage() {
     return banners
       .filter((banner) => {
         const matchesPosition = position === "all" || banner.position === position;
-        const matchesStatus = status === "all" || banner.status === status;
+        const matchesStatus = status === "all" || getBannerStatus(banner) === status;
         const searchBlob = [banner.title, banner.position, banner.linkUrl].join(" ").toLowerCase();
         return matchesPosition && matchesStatus && (!normalizedKeyword || searchBlob.includes(normalizedKeyword));
       })
@@ -80,16 +78,7 @@ export function BannersPage() {
   async function handleSubmit(values: BannerFormValues) {
     setSubmitting(true);
 
-    const payload: BannerFormPayload = {
-      title: values.title,
-      imageUrl: values.imageUrl,
-      linkUrl: emptyToUndefined(values.linkUrl),
-      position: values.position,
-      startDate: values.startDate,
-      endDate: values.endDate,
-      status: values.status,
-      sortOrder: values.sortOrder,
-    };
+    const payload = buildBannerPayload(values);
 
     try {
       if (editingBanner) {
@@ -104,6 +93,9 @@ export function BannersPage() {
       setEditingBanner(null);
       await loadBanners();
     } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Banner submit failed", { payload, error });
+      }
       toast.error(getErrorMessage(error));
     } finally {
       setSubmitting(false);
@@ -125,10 +117,13 @@ export function BannersPage() {
 
   async function handleToggleStatus() {
     if (!togglingBanner) return;
-    const nextStatus: BannerStatus = togglingBanner.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const currentStatus = getBannerStatus(togglingBanner);
+    const nextStatus: BannerStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
     try {
-      await bannerService.updateBanner(getEntityId(togglingBanner), { status: nextStatus });
+      await bannerService.updateBanner(getEntityId(togglingBanner), {
+        status: nextStatus,
+      });
       toast.success(nextStatus === "ACTIVE" ? "Da bat banner" : "Da tat banner");
       setTogglingBanner(null);
       await loadBanners();
@@ -190,37 +185,41 @@ export function BannersPage() {
               <TableBody>
                 {visibleBanners.length === 0 ? (
                   <TableRow><TableCell className="py-12 text-center text-muted-foreground" colSpan={7}>Khong tim thay banner phu hop.</TableCell></TableRow>
-                ) : visibleBanners.map((banner) => (
-                  <TableRow key={getEntityId(banner)}>
-                    <TableCell className="w-[180px]">
-                      <div className="flex aspect-[16/9] w-36 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-                        {banner.imageUrl ? (
-                          <div aria-label={banner.title} className="h-full w-full bg-cover bg-center" role="img" style={{ backgroundImage: `url(${banner.imageUrl})` }} />
-                        ) : (
-                          <ImageIcon className="size-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="w-[260px]">
-                      <p className="font-medium">{banner.title}</p>
-                      <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{banner.linkUrl || "Khong co link"}</p>
-                    </TableCell>
-                    <TableCell className="w-[170px] font-mono text-xs">{banner.position}</TableCell>
-                    <TableCell className="w-[220px] text-sm text-muted-foreground">{formatDate(banner.startDate)} - {formatDate(banner.endDate)}</TableCell>
-                    <TableCell className="w-[90px] font-mono">{banner.sortOrder}</TableCell>
-                    <TableCell className="w-[130px]">
-                      <button type="button" onClick={() => setTogglingBanner(banner)}>
-                        <StatusBadge label={banner.status} variant={banner.status === "ACTIVE" ? "success" : "neutral"} />
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-[130px]">
-                      <div className="flex justify-end gap-2">
-                        <Button aria-label="Sua banner" size="icon" variant="outline" onClick={() => { setEditingBanner(banner); setFormOpen(true); }}><Edit className="size-4" /></Button>
-                        <Button aria-label="Xoa banner" size="icon" variant="destructive" onClick={() => setDeletingBanner(banner)}><Trash2 className="size-4" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                ) : visibleBanners.map((banner) => {
+                  const bannerStatus = getBannerStatus(banner);
+
+                  return (
+                    <TableRow key={getEntityId(banner)}>
+                      <TableCell className="w-[180px]">
+                        <div className="flex aspect-[16/9] w-36 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                          {banner.imageUrl ? (
+                            <div aria-label={banner.title} className="h-full w-full bg-cover bg-center" role="img" style={{ backgroundImage: `url(${banner.imageUrl})` }} />
+                          ) : (
+                            <ImageIcon className="size-5 text-muted-foreground" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="w-[260px]">
+                        <p className="font-medium">{banner.title}</p>
+                        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{banner.linkUrl || "Khong co link"}</p>
+                      </TableCell>
+                      <TableCell className="w-[170px] font-mono text-xs">{banner.position}</TableCell>
+                      <TableCell className="w-[220px] text-sm text-muted-foreground">{formatDate(banner.startDate)} - {formatDate(banner.endDate)}</TableCell>
+                      <TableCell className="w-[90px] font-mono">{banner.sortOrder}</TableCell>
+                      <TableCell className="w-[130px]">
+                        <button type="button" onClick={() => setTogglingBanner(banner)}>
+                          <StatusBadge label={bannerStatus} variant={bannerStatus === "ACTIVE" ? "success" : "neutral"} />
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-[130px]">
+                        <div className="flex justify-end gap-2">
+                          <Button aria-label="Sua banner" size="icon" variant="outline" onClick={() => { setEditingBanner(banner); setFormOpen(true); }}><Edit className="size-4" /></Button>
+                          <Button aria-label="Xoa banner" size="icon" variant="destructive" onClick={() => setDeletingBanner(banner)}><Trash2 className="size-4" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -246,7 +245,7 @@ export function BannersPage() {
       />
 
       <ConfirmDialog
-        description={`Ban co chac muon ${togglingBanner?.status === "ACTIVE" ? "tat" : "bat"} banner "${togglingBanner?.title ?? ""}"?`}
+        description={`Ban co chac muon ${getBannerStatus(togglingBanner) === "ACTIVE" ? "tat" : "bat"} banner "${togglingBanner?.title ?? ""}"?`}
         open={Boolean(togglingBanner)}
         title="Cap nhat trang thai banner"
         confirmText="Xac nhan"
@@ -257,13 +256,34 @@ export function BannersPage() {
   );
 }
 
+function buildBannerPayload(values: BannerFormValues): BannerFormPayload {
+  const status = values.status;
+
+  return {
+    title: values.title.trim(),
+    imageUrl: values.imageUrl.trim(),
+    linkUrl: values.linkUrl.trim(),
+    position: values.position.trim(),
+    startDate: toIsoDate(values.startDate),
+    endDate: toIsoDate(values.endDate),
+    status,
+    sortOrder: values.sortOrder,
+  };
+}
+
 function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
 }
 
-function emptyToUndefined(value?: string | null) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
+function toIsoDate(value: string) {
+  if (!value) return value;
+  return new Date(`${value}T00:00:00.000Z`).toISOString();
+}
+
+function getBannerStatus(banner?: Banner | null): BannerStatus {
+  if (!banner) return "INACTIVE";
+  if (banner.status) return banner.status;
+  return banner.isActive ? "ACTIVE" : "INACTIVE";
 }
 
 function formatDate(value?: string) {

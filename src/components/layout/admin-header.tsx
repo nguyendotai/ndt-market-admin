@@ -50,7 +50,7 @@ export function AdminHeader({ onOpenSidebar }: AdminHeaderProps) {
         {focused && keyword.trim() ? (
           <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl">
             {results.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground">Khong tim thay module phu hop.</div>
+              <div className="px-4 py-3 text-sm text-muted-foreground">Không tìm thấy module phù hợp.</div>
             ) : (
               <div className="p-1">
                 {results.map((item) => (

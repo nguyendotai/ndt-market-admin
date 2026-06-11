@@ -13,7 +13,7 @@ type AdminRouteGuardProps = {
 };
 
 const extraRouteRules: Array<{ href: string; rule: AccessRule }> = [
-  { href: "/admin/article-categories", rule: { requiredPermissions: ["article.view"] } },
+  { href: "/admin/article-categories", rule: { requiredPermissions: ["cms.manage"] } },
 ];
 
 export function AdminRouteGuard({ children }: AdminRouteGuardProps) {

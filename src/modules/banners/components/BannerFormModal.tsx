@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImageIcon, Loader2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type FieldErrors, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,20 +28,18 @@ const defaultValues: BannerFormInput = {
   title: "",
   imageUrl: "",
   linkUrl: "",
-  position: "HOME_HERO",
+  position: "HOME_TOP",
   startDate: "",
   endDate: "",
   status: "ACTIVE",
-  sortOrder: 0,
+  sortOrder: 1,
 };
 
 const POSITION_OPTIONS = [
-  "HOME_HERO",
   "HOME_TOP",
   "HOME_MIDDLE",
-  "HOME_BOTTOM",
-  "CATEGORY_TOP",
-  "PRODUCT_DETAIL",
+  "CATEGORY",
+  "POPUP",
 ];
 
 export function BannerFormModal({
@@ -117,20 +115,20 @@ export function BannerFormModal({
           </Button>
         </div>
 
-        <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="grid gap-4" onSubmit={handleSubmit(onSubmit, handleInvalidSubmit)}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Tieu de" error={errors.title?.message}>
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("title")} />
             </Field>
             <Field label="Link URL" error={errors.linkUrl?.message}>
-              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="https://..." {...register("linkUrl")} />
+              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="https://example.com" {...register("linkUrl")} />
             </Field>
           </div>
 
           <Field label="Anh banner" error={errors.imageUrl?.message}>
             <div className="grid gap-3 md:grid-cols-[1fr_220px]">
               <div className="grid gap-2">
-                <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="Cloudinary image URL" {...register("imageUrl")} />
+                <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="https://res.cloudinary.com/..." {...register("imageUrl")} />
                 <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium hover:bg-muted">
                   {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
                   Upload banner
@@ -209,4 +207,9 @@ function toDateInputValue(value?: string) {
 function getErrorMessage(error: unknown) {
   if (error && typeof error === "object" && "message" in error) return String(error.message);
   return "Upload banner that bai";
+}
+
+function handleInvalidSubmit(errors: FieldErrors<BannerFormInput>) {
+  const firstError = Object.values(errors).find((error) => error?.message);
+  toast.error(firstError?.message ? String(firstError.message) : "Vui long kiem tra lai thong tin banner");
 }

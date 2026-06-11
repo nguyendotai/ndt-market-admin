@@ -5,13 +5,11 @@ export type ArticleCategory = {
   id: string;
   name: string;
   slug: string;
-  description?: string | null;
 };
 
 export type ArticleCategoryPayload = {
   name: string;
   slug: string;
-  description?: string;
 };
 
 export type Article = {

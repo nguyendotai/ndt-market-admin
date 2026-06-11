@@ -29,10 +29,10 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string }>) => {
+  (error: AxiosError<unknown>) => {
     const status = error.response?.status ?? 0;
     const fallbackMessage = getFallbackErrorMessage(status);
-    const message = error.response?.data?.message ?? fallbackMessage;
+    const message = getApiErrorMessage(error.response?.data, fallbackMessage);
     const apiError: ApiErrorPayload = {
       status,
       message,
@@ -50,6 +50,63 @@ apiClient.interceptors.response.use(
     return Promise.reject(apiError);
   },
 );
+
+function getApiErrorMessage(payload: unknown, fallbackMessage: string) {
+  if (!payload || typeof payload !== "object") {
+    return fallbackMessage;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const details = [
+    record.errors,
+    record.error,
+    record.details,
+    record.data,
+  ]
+    .map(formatErrorDetail)
+    .filter(Boolean);
+  const message = formatErrorDetail(record.message);
+
+  return [message, ...details].filter(Boolean).join(": ") || fallbackMessage;
+}
+
+function formatErrorDetail(value: unknown): string {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(formatErrorDetail).filter(Boolean).join(", ");
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const field = formatErrorDetail(record.field ?? record.path ?? record.property);
+    const message = formatErrorDetail(record.message ?? record.msg ?? record.reason);
+
+    if (field && message) {
+      return `${field} ${message}`;
+    }
+
+    if (message) {
+      return message;
+    }
+
+    return Object.entries(record)
+      .map(([key, entryValue]) => {
+        const formattedValue = formatErrorDetail(entryValue);
+        return formattedValue ? `${key}: ${formattedValue}` : "";
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  return String(value);
+}
 
 function getFallbackErrorMessage(status: number) {
   switch (status) {

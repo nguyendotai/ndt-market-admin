@@ -1,6 +1,6 @@
 export type Brand = {
   _id?: string;
-  id: string;
+  id?: string;
   name: string;
   slug: string;
   logo?: string | null;

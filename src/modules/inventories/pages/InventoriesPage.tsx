@@ -18,16 +18,20 @@ import type {
   InventoryItem,
   StockMovement,
 } from "@/modules/inventories";
+import type { Product } from "@/modules/products";
 import type { Store as StoreItem } from "@/modules/stores";
 import { inventoryService } from "@/services/inventory.service";
+import { productService } from "@/services/product.service";
 import { storeService } from "@/services/store.service";
 
 export function InventoriesPage() {
   const [inventories, setInventories] = useState<InventoryItem[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [selectedInventory, setSelectedInventory] = useState<InventoryItem | null>(null);
   const [store, setStore] = useState("all");
+  const [lowStockOnly, setLowStockOnly] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
@@ -39,16 +43,19 @@ export function InventoriesPage() {
     setLoading(true);
 
     try {
-      const [inventoryResponse, storeResponse] = await Promise.all([
+      const [inventoryResponse, storeResponse, productResponse] = await Promise.all([
         inventoryService.listInventories({
           keyword: keyword.trim() || undefined,
-          store: store === "all" ? undefined : store,
+          lowStock: lowStockOnly || undefined,
+          storeId: store === "all" ? undefined : store,
         }),
         storeService.listStores(),
+        productService.listProducts({ limit: 500, status: "all" }),
       ]);
 
       setInventories(inventoryResponse.data);
       setStores(storeResponse.data);
+      setProducts(productResponse.data);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -56,11 +63,15 @@ export function InventoriesPage() {
     }
   }
 
-  async function loadMovements(inventoryId?: string) {
+  async function loadMovements(inventory?: InventoryItem | null) {
     setMovementLoading(true);
 
     try {
-      const response = await inventoryService.listMovements({ inventoryId });
+      const response = await inventoryService.listMovements({
+        keyword: keyword.trim() || undefined,
+        storeId: inventory ? getRefId(inventory.store, inventory.storeId) : store === "all" ? undefined : store,
+        variantId: inventory ? getRefId(inventory.variant, inventory.variantId) : undefined,
+      });
       setMovements(response.data);
     } catch {
       setMovements([]);
@@ -77,15 +88,17 @@ export function InventoriesPage() {
     return () => window.clearTimeout(timer);
     // loadData intentionally reads the current filter state from this effect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyword, store]);
+  }, [keyword, lowStockOnly, store]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      loadMovements(selectedInventory ? getEntityId(selectedInventory) : undefined);
+      loadMovements(selectedInventory);
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [selectedInventory]);
+    // loadMovements intentionally reads current keyword/store filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedInventory, keyword, store]);
 
   const visibleInventories = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
@@ -110,9 +123,10 @@ export function InventoriesPage() {
     setSubmitting(true);
 
     const payload: InventoryImportPayload = {
-      inventoryId: values.inventoryId,
       quantity: values.quantity,
-      note: emptyToUndefined(values.note),
+      reason: emptyToUndefined(values.reason),
+      store: values.storeId,
+      variant: values.variantId,
     };
 
     try {
@@ -121,7 +135,7 @@ export function InventoriesPage() {
       setImportOpen(false);
       setSelectedInventory(null);
       await loadData();
-      await loadMovements(values.inventoryId);
+      await loadMovements(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -133,9 +147,10 @@ export function InventoriesPage() {
     setSubmitting(true);
 
     const payload: InventoryAdjustPayload = {
-      inventoryId: values.inventoryId,
       quantity: values.quantity,
-      note: emptyToUndefined(values.note),
+      reason: emptyToUndefined(values.reason),
+      store: values.storeId,
+      variant: values.variantId,
     };
 
     try {
@@ -144,7 +159,7 @@ export function InventoriesPage() {
       setAdjustOpen(false);
       setSelectedInventory(null);
       await loadData();
-      await loadMovements(values.inventoryId);
+      await loadMovements(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -215,6 +230,15 @@ export function InventoriesPage() {
                   );
                 })}
               </select>
+              <label className="flex h-9 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium">
+                <input
+                  checked={lowStockOnly}
+                  className="size-4 accent-primary"
+                  type="checkbox"
+                  onChange={(event) => setLowStockOnly(event.target.checked)}
+                />
+                LOW_STOCK
+              </label>
             </div>
           </div>
         </CardHeader>
@@ -250,7 +274,7 @@ export function InventoriesPage() {
                 ) : (
                   visibleInventories.map((inventory) => {
                     const availableQuantity = getAvailableQuantity(inventory);
-                    const isLowStock = availableQuantity <= 5;
+                    const isLowStock = getStockStatus(inventory) === "LOW_STOCK";
 
                     return (
                       <TableRow key={getEntityId(inventory)}>
@@ -347,7 +371,12 @@ export function InventoriesPage() {
                       <StatusBadge label={movement.type} variant={movement.type === "IMPORT" ? "success" : "info"} />
                     </TableCell>
                     <TableCell className="font-mono">{movement.quantity}</TableCell>
-                    <TableCell>{movement.note || "-"}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p>{movement.reason ?? movement.note ?? "-"}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{getCreatedByName(movement)}</p>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(movement.createdAt)}</TableCell>
                   </TableRow>
                 ))}
@@ -361,6 +390,8 @@ export function InventoriesPage() {
         initialInventory={selectedInventory}
         inventories={inventories}
         open={importOpen}
+        products={products}
+        stores={stores}
         submitting={submitting}
         onClose={() => {
           setImportOpen(false);
@@ -373,6 +404,8 @@ export function InventoriesPage() {
         initialInventory={selectedInventory}
         inventories={inventories}
         open={adjustOpen}
+        products={products}
+        stores={stores}
         submitting={submitting}
         onClose={() => {
           setAdjustOpen(false);
@@ -389,31 +422,46 @@ function getAvailableQuantity(inventory: InventoryItem) {
 }
 
 function getProductName(inventory: InventoryItem) {
+  if (inventory.productName) return inventory.productName;
   if (!inventory.product || typeof inventory.product === "string") return inventory.productId ?? "-";
   return inventory.product.name;
 }
 
 function getProductSku(inventory: InventoryItem) {
+  if (inventory.productSku) return inventory.productSku;
   if (!inventory.product || typeof inventory.product === "string") return inventory.productId ?? "-";
   return inventory.product.sku ?? "-";
 }
 
 function getVariantName(inventory: InventoryItem) {
+  if (inventory.variantName) return inventory.variantName;
   if (!inventory.variant || typeof inventory.variant === "string") return inventory.variantId ?? "-";
   return inventory.variant.name;
 }
 
 function getVariantBarcode(inventory: InventoryItem) {
+  if (inventory.barcode) return inventory.barcode;
   if (!inventory.variant || typeof inventory.variant === "string") return inventory.variantId ?? "-";
   return inventory.variant.barcode ?? "-";
 }
 
 function getStoreName(inventory: InventoryItem) {
+  if (inventory.storeName) return inventory.storeName;
   if (!inventory.store || typeof inventory.store === "string") return inventory.storeId ?? "-";
   return inventory.store.name;
 }
 
-function getRefId(value: InventoryItem["store"], fallback?: string) {
+function getStockStatus(inventory: InventoryItem) {
+  return inventory.stockStatus ?? (getAvailableQuantity(inventory) <= 5 ? "LOW_STOCK" : "IN_STOCK");
+}
+
+function getCreatedByName(movement: StockMovement) {
+  if (!movement.createdBy) return "-";
+  if (typeof movement.createdBy === "string") return movement.createdBy;
+  return movement.createdBy.fullName ?? movement.createdBy.name ?? movement.createdBy._id ?? movement.createdBy.id ?? "-";
+}
+
+function getRefId(value: InventoryItem["product"] | InventoryItem["variant"] | InventoryItem["store"], fallback?: string) {
   if (!value) return fallback ?? "";
   if (typeof value === "string") return value;
   return getEntityId(value);

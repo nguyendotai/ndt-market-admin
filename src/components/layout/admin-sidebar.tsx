@@ -95,7 +95,7 @@ export function AdminSidebar({
           onClick={() => onCollapseChange?.(!collapsed)}
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-          <span className={cn(collapsed && "sr-only")}>{collapsed ? "Mo rong" : "Thu gon"}</span>
+          <span className={cn(collapsed && "sr-only")}>{collapsed ? "Mở rộng" : "Thu gọn"}</span>
         </Button>
         {visibleMenu.map((item) => {
           const Icon = iconMap[item.icon as keyof typeof iconMap] ?? LayoutDashboard;

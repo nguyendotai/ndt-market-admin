@@ -25,7 +25,7 @@ type CouponFormModalProps = {
 const defaultValues: CouponFormInput = {
   code: "",
   name: "",
-  discountType: "PERCENTAGE",
+  discountType: "PERCENT",
   discountValue: 0,
   minOrderValue: "",
   maxDiscount: "",
@@ -102,7 +102,7 @@ export function CouponFormModal({
           <div className="grid gap-4 md:grid-cols-4">
             <Field label="Loai giam" error={errors.discountType?.message}>
               <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("discountType")}>
-                <option value="PERCENTAGE">Percentage</option>
+                <option value="PERCENT">Percentage</option>
                 <option value="FIXED">Fixed</option>
               </select>
             </Field>

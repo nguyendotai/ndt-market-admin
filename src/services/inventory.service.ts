@@ -8,8 +8,11 @@ import type {
 import { normalizeBackendResponse } from "@/services/api-response";
 
 export type InventoryListParams = {
-  store?: string;
+  storeId?: string;
+  variantId?: string;
   keyword?: string;
+  search?: string;
+  lowStock?: boolean;
 };
 
 export const inventoryService = {
@@ -33,7 +36,13 @@ export const inventoryService = {
     return normalizeBackendResponse<InventoryItem | StockMovement>(response.data);
   },
 
-  async listMovements(params?: { inventoryId?: string }) {
+  async listMovements(params?: {
+    storeId?: string;
+    variantId?: string;
+    type?: "IMPORT" | "EXPORT" | "ADJUST" | "RESERVE" | "RELEASE" | string;
+    keyword?: string;
+    search?: string;
+  }) {
     const response = await apiClient.get("/admin/inventories/movements", { params });
     return normalizeBackendResponse<StockMovement[]>(response.data);
   },

@@ -22,7 +22,6 @@ export const articleCategorySchema = z.object({
     .string()
     .min(2, "Slug phai co it nhat 2 ky tu")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chi gom chu thuong, so va dau gach ngang"),
-  description: z.string().max(300, "Mo ta toi da 300 ky tu").optional().or(z.literal("")),
 });
 
 export type ArticleFormInput = z.input<typeof articleFormSchema>;

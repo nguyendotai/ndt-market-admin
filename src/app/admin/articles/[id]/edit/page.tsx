@@ -5,7 +5,7 @@ type PageProps = {
 };
 
 export default async function Page({ params }: PageProps) {
-  const { id } = await params;
+  const { id: slug } = await params;
 
-  return <ArticleFormPage articleId={id} />;
+  return <ArticleFormPage articleSlug={slug} />;
 }

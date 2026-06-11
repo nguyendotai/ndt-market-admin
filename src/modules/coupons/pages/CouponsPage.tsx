@@ -257,7 +257,7 @@ function normalizeOptionalNumber(value: CouponFormValues["minOrderValue"]) {
 }
 
 function formatDiscount(type: string, value: number) {
-  return type === "PERCENTAGE" ? `${value}%` : formatCurrency(value);
+  return type === "PERCENT" ? `${value}%` : formatCurrency(value);
 }
 
 function formatCurrency(value: number) {

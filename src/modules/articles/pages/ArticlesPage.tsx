@@ -217,7 +217,7 @@ export function ArticlesPage() {
                             <Link
                               aria-label="Sua bai viet"
                               className={buttonVariants({ size: "icon", variant: "outline" })}
-                              href={`/admin/articles/${articleId}/edit`}
+                              href={`/admin/articles/${article.slug}/edit`}
                             >
                               <Edit className="size-4" />
                             </Link>

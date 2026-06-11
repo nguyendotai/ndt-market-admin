@@ -28,8 +28,8 @@ export const articleService = {
     return normalizeBackendResponse<Article[]>(response.data);
   },
 
-  async getArticleById(id: string) {
-    const response = await apiClient.get(`/articles/${id}`);
+  async getArticleBySlug(slug: string) {
+    const response = await apiClient.get(`/articles/${slug}`);
     return normalizeBackendResponse<Article>(response.data);
   },
 
