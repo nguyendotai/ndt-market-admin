@@ -24,7 +24,6 @@ type CouponFormModalProps = {
 
 const defaultValues: CouponFormInput = {
   code: "",
-  name: "",
   discountType: "PERCENT",
   discountValue: 0,
   minOrderValue: "",
@@ -58,7 +57,6 @@ export function CouponFormModal({
       initialValues
         ? {
             code: initialValues.code,
-            name: initialValues.name ?? "",
             discountType: initialValues.discountType,
             discountValue: initialValues.discountValue,
             minOrderValue: initialValues.minOrderValue ?? "",
@@ -94,8 +92,11 @@ export function CouponFormModal({
             <Field label="Coupon code" error={errors.code?.message}>
               <input className="h-10 rounded-lg border bg-background px-3 font-mono text-sm uppercase outline-none focus:ring-3 focus:ring-ring/30" placeholder="NDTSALE" {...register("code")} />
             </Field>
-            <Field label="Ten coupon" error={errors.name?.message}>
-              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("name")} />
+            <Field label="Trang thai" error={errors.status?.message}>
+              <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("status")}>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
             </Field>
           </div>
 
@@ -117,7 +118,7 @@ export function CouponFormModal({
             </Field>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <Field label="Het han" error={errors.expiredAt?.message}>
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" type="date" {...register("expiredAt")} />
             </Field>
@@ -126,12 +127,6 @@ export function CouponFormModal({
             </Field>
             <Field label="User limit" error={errors.userLimit?.message}>
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" min={0} type="number" {...register("userLimit")} />
-            </Field>
-            <Field label="Trang thai" error={errors.status?.message}>
-              <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("status")}>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-              </select>
             </Field>
           </div>
 

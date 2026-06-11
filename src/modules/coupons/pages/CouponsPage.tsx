@@ -65,12 +65,11 @@ export function CouponsPage() {
 
     const payload: CouponFormPayload = {
       code: values.code,
-      name: emptyToUndefined(values.name),
       discountType: values.discountType,
       discountValue: values.discountValue,
       minOrderValue: normalizeOptionalNumber(values.minOrderValue),
       maxDiscount: normalizeOptionalNumber(values.maxDiscount),
-      expiredAt: values.expiredAt,
+      expiredAt: toIsoDate(values.expiredAt),
       usageLimit: normalizeOptionalNumber(values.usageLimit),
       userLimit: normalizeOptionalNumber(values.userLimit),
       status: values.status,
@@ -246,11 +245,6 @@ function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
 }
 
-function emptyToUndefined(value?: string | null) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
-}
-
 function normalizeOptionalNumber(value: CouponFormValues["minOrderValue"]) {
   if (value === "" || value == null) return undefined;
   return Number(value);
@@ -267,6 +261,11 @@ function formatCurrency(value: number) {
 function formatDate(value?: string) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short" }).format(new Date(value));
+}
+
+function toIsoDate(value: string) {
+  if (!value) return value;
+  return new Date(`${value}T00:00:00.000Z`).toISOString();
 }
 
 function getErrorMessage(error: unknown) {

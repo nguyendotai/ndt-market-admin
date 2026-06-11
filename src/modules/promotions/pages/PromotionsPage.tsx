@@ -63,7 +63,7 @@ export function PromotionsPage() {
 
     return promotions.filter((promotion) => {
       const matchesStatus = status === "all" || promotion.status === status;
-      const searchBlob = [promotion.name, promotion.code].join(" ").toLowerCase();
+      const searchBlob = [promotion.name, promotion.type].join(" ").toLowerCase();
       return matchesStatus && (!normalizedKeyword || searchBlob.includes(normalizedKeyword));
     });
   }, [promotions, keyword, status]);
@@ -72,15 +72,15 @@ export function PromotionsPage() {
     setSubmitting(true);
 
     const payload: PromotionFormPayload = {
-      name: values.name,
-      code: emptyToUndefined(values.code),
+      name: values.name.trim(),
+      type: values.type,
       discountType: values.discountType,
       discountValue: values.discountValue,
       minOrderValue: normalizeOptionalNumber(values.minOrderValue),
       maxDiscount: normalizeOptionalNumber(values.maxDiscount),
-      startDate: values.startDate,
-      endDate: values.endDate,
-      productIds: values.productIds,
+      startDate: toIsoDate(values.startDate),
+      endDate: toIsoDate(values.endDate),
+      variantIds: values.variantIds,
       status: values.status,
     };
 
@@ -151,7 +151,7 @@ export function PromotionsPage() {
             <div className="grid gap-2 sm:grid-cols-[minmax(260px,360px)_160px]">
               <div className="flex h-9 items-center gap-2 rounded-lg border bg-background px-3 text-sm text-muted-foreground">
                 <Search className="size-4" />
-                <input className="w-full bg-transparent outline-none" placeholder="Search ten/code" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+                <input className="w-full bg-transparent outline-none" placeholder="Search ten/type" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
               </div>
               <select className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)}>
                 <option value="all">Tat ca status</option>
@@ -172,7 +172,7 @@ export function PromotionsPage() {
                   <TableHead>Discount</TableHead>
                   <TableHead>Dieu kien</TableHead>
                   <TableHead>Thoi gian</TableHead>
-                  <TableHead>San pham</TableHead>
+                  <TableHead>Bien the</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Thao tac</TableHead>
                 </TableRow>
@@ -184,14 +184,14 @@ export function PromotionsPage() {
                   <TableRow key={getEntityId(promotion)}>
                     <TableCell className="w-[220px]">
                       <p className="font-medium">{promotion.name}</p>
-                      <p className="mt-1 font-mono text-xs text-muted-foreground">{promotion.code || "-"}</p>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">{promotion.type}</p>
                     </TableCell>
                     <TableCell>{formatDiscount(promotion.discountType, promotion.discountValue)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       Min {formatCurrency(promotion.minOrderValue ?? 0)} / Max {formatCurrency(promotion.maxDiscount ?? 0)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{formatDate(promotion.startDate)} - {formatDate(promotion.endDate)}</TableCell>
-                    <TableCell>{getProductCount(promotion)} san pham</TableCell>
+                    <TableCell>{getVariantCount(promotion)} bien the</TableCell>
                     <TableCell>
                       <button type="button" onClick={() => setTogglingPromotion(promotion)}>
                         <StatusBadge label={promotion.status} variant={promotion.status === "ACTIVE" ? "success" : "neutral"} />
@@ -242,17 +242,12 @@ export function PromotionsPage() {
   );
 }
 
-function getProductCount(promotion: Promotion) {
-  return promotion.productIds?.length ?? promotion.products?.length ?? 0;
+function getVariantCount(promotion: Promotion) {
+  return promotion.variantIds?.length ?? promotion.variants?.length ?? 0;
 }
 
 function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
-}
-
-function emptyToUndefined(value?: string | null) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
 }
 
 function normalizeOptionalNumber(value: PromotionFormValues["minOrderValue"]) {
@@ -261,7 +256,12 @@ function normalizeOptionalNumber(value: PromotionFormValues["minOrderValue"]) {
 }
 
 function formatDiscount(type: string, value: number) {
-  return type === "PERCENTAGE" ? `${value}%` : formatCurrency(value);
+  return type === "PERCENT" ? `${value}%` : formatCurrency(value);
+}
+
+function toIsoDate(value: string) {
+  if (!value) return value;
+  return new Date(`${value}T00:00:00.000Z`).toISOString();
 }
 
 function formatCurrency(value: number) {

@@ -6,7 +6,6 @@ export const couponStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
 
 export const couponFormSchema = z.object({
   code: z.string().min(2, "Ma coupon phai co it nhat 2 ky tu").transform((value) => value.trim().toUpperCase()),
-  name: z.string().optional().or(z.literal("")),
   discountType: discountTypeSchema.default("PERCENT"),
   discountValue: z.coerce.number().positive("Gia tri giam phai lon hon 0"),
   minOrderValue: z.coerce.number().min(0, "Gia tri don toi thieu khong duoc am").optional().or(z.literal("")),

@@ -26,14 +26,14 @@ type PromotionFormModalProps = {
 
 const defaultValues: PromotionFormInput = {
   name: "",
-  code: "",
+  type: "PRODUCT_DISCOUNT",
   discountType: "PERCENT",
   discountValue: 0,
   minOrderValue: "",
   maxDiscount: "",
   startDate: "",
   endDate: "",
-  productIds: [],
+  variantIds: [],
   status: "ACTIVE",
 };
 
@@ -61,14 +61,14 @@ export function PromotionFormModal({
       initialValues
         ? {
             name: initialValues.name,
-            code: initialValues.code ?? "",
+            type: initialValues.type ?? "PRODUCT_DISCOUNT",
             discountType: initialValues.discountType,
             discountValue: initialValues.discountValue,
             minOrderValue: initialValues.minOrderValue ?? "",
             maxDiscount: initialValues.maxDiscount ?? "",
             startDate: toDateInputValue(initialValues.startDate),
             endDate: toDateInputValue(initialValues.endDate),
-            productIds: getProductIds(initialValues),
+            variantIds: getVariantIds(initialValues),
             status: initialValues.status,
           }
         : defaultValues,
@@ -97,8 +97,12 @@ export function PromotionFormModal({
             <Field label="Ten khuyen mai" error={errors.name?.message}>
               <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("name")} />
             </Field>
-            <Field label="Code noi bo" error={errors.code?.message}>
-              <input className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" placeholder="SUMMER-SALE" {...register("code")} />
+            <Field label="Loai promotion" error={errors.type?.message}>
+              <select className="h-10 rounded-lg border bg-background px-3 text-sm outline-none focus:ring-3 focus:ring-ring/30" {...register("type")}>
+                <option value="PRODUCT_DISCOUNT">Product discount</option>
+                <option value="ORDER_DISCOUNT">Order discount</option>
+                <option value="BUY_X_GET_Y">Buy X get Y</option>
+              </select>
             </Field>
           </div>
 
@@ -135,19 +139,17 @@ export function PromotionFormModal({
             </Field>
           </div>
 
-          <Field label="San pham ap dung" error={errors.productIds?.message}>
-            <select className="min-h-40 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-3 focus:ring-ring/30" multiple {...register("productIds")}>
-              {products.map((product) => {
-                const productId = getEntityId(product);
-                if (!productId) return null;
+          <Field label="Bien the ap dung" error={errors.variantIds?.message}>
+            <select className="min-h-44 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-3 focus:ring-ring/30" multiple {...register("variantIds")}>
+              {getVariantOptions(products).map((variant) => {
                 return (
-                  <option key={productId} value={productId}>
-                    {product.name} - {product.sku}
+                  <option key={variant.id} value={variant.id}>
+                    {variant.label}
                   </option>
                 );
               })}
             </select>
-            <p className="text-xs text-muted-foreground">Giu Ctrl/Command de chon nhieu san pham. Bo trong neu promotion ap dung toan catalog.</p>
+            <p className="text-xs text-muted-foreground">Giu Ctrl/Command de chon nhieu bien the. Bo trong neu promotion ap dung theo don hang/toan catalog.</p>
           </Field>
 
           <div className="flex justify-end gap-2 border-t pt-4">
@@ -173,14 +175,29 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-function getProductIds(promotion: Promotion) {
-  if (promotion.productIds?.length) return promotion.productIds;
+function getVariantIds(promotion: Promotion) {
+  if (promotion.variantIds?.length) return promotion.variantIds;
 
-  return (promotion.products ?? []).map((item) => (typeof item === "string" ? item : getEntityId(item))).filter(Boolean);
+  return (promotion.variants ?? []).map((item) => (typeof item === "string" ? item : getEntityId(item))).filter(Boolean);
 }
 
 function getEntityId(value: { id?: string; _id?: string }) {
   return value.id ?? value._id ?? "";
+}
+
+function getVariantOptions(products: Product[]) {
+  return products.flatMap((product) => {
+    const productName = product.name;
+    const productSku = product.sku;
+
+    return (product.variants ?? []).map((variant) => {
+      const variantId = getEntityId(variant);
+      return {
+        id: variantId,
+        label: `${productName} / ${variant.name}${variant.barcode ? ` - ${variant.barcode}` : productSku ? ` - ${productSku}` : ""}`,
+      };
+    }).filter((variant) => variant.id);
+  });
 }
 
 function toDateInputValue(value?: string) {

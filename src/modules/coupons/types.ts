@@ -20,7 +20,6 @@ export type Coupon = {
 
 export type CouponFormPayload = {
   code: string;
-  name?: string;
   discountType: DiscountType;
   discountValue: number;
   minOrderValue?: number;
